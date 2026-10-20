@@ -37,7 +37,7 @@ All methods embed the same 16-bit message and are attacked with the same paramet
 
 | Method | Type | Status |
 |---|---|---|
-| audiowmark | classical, spread spectrum | done: 80 tracks, time and dynamics attacks |
+| audiowmark | classical, frequency-domain (patchwork) | done: 80 tracks, time and dynamics attacks |
 | AudioSeal | neural | wrapper, smoke test and run script in the repo; full results pending |
 | WavMark | neural | in progress |
 
@@ -103,7 +103,7 @@ AudioSeal: `python -m scripts.run_audioseal --wav-dir <wav-folder> --out results
 ├── notebooks/     # 01_audiowmark_baseline.ipynb: data preparation and pilot experiments
 ├── data/          # selected_80.csv and data card (audio is not committed)
 ├── results/       # CSV files with results and their description
-├── docs/          # proposal, metrics, AudioSeal notes, poster, slides
+├── docs/          # proposal, metrics, classical methods review, AudioSeal notes, poster, slides
 └── config/        # configuration
 ```
 
