@@ -23,8 +23,15 @@ MESSAGE = "1011001110001101"  # shared 16-bit message, same for all methods
 DETECT_MIN_BITS = 14  # detected if at least 14 of 16 bits are correct
 
 CSV_COLUMNS = [
-    "method", "attack", "params", "genre", "track_id",
-    "detected", "snr", "bit_acc", "detect_prob",
+    "method",
+    "attack",
+    "params",
+    "genre",
+    "track_id",
+    "detected",
+    "snr",
+    "bit_acc",
+    "detect_prob",
 ]
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -32,6 +39,7 @@ SELECTION_CSV = REPO_ROOT / "data" / "selected_80.csv"
 
 
 # ---------- ffmpeg ----------
+
 
 @lru_cache(maxsize=1)
 def ffmpeg_exe() -> str:
@@ -51,13 +59,26 @@ def ffmpeg_exe() -> str:
 
 def ffmpeg_decode(path: str | Path, sr: int = SR) -> np.ndarray:
     """Decode any audio file to a mono float32 array at `sr`."""
-    cmd = [ffmpeg_exe(), "-v", "error", "-i", str(path),
-           "-ac", "1", "-ar", str(sr), "-f", "f32le", "-"]
+    cmd = [
+        ffmpeg_exe(),
+        "-v",
+        "error",
+        "-i",
+        str(path),
+        "-ac",
+        "1",
+        "-ar",
+        str(sr),
+        "-f",
+        "f32le",
+        "-",
+    ]
     out = subprocess.run(cmd, capture_output=True, check=True).stdout
     return np.frombuffer(out, dtype=np.float32).copy()
 
 
 # ---------- audio ----------
+
 
 def to_mono(x: np.ndarray) -> np.ndarray:
     return x.mean(axis=1) if x.ndim == 2 else x
@@ -105,6 +126,7 @@ def write_wav(path: str | Path, x: np.ndarray, sr: int = SR) -> None:
 
 # ---------- metrics ----------
 
+
 def snr_db(original: np.ndarray, processed: np.ndarray) -> float:
     """SNR = 10*log10( sum(x^2) / sum((x - x_w)^2) )."""
     n = min(len(original), len(processed))
@@ -129,6 +151,7 @@ def is_detected(bit_acc: float, nbits: int = 16) -> bool:
 
 
 # ---------- selection / CSV ----------
+
 
 def read_selection(path: Path = SELECTION_CSV) -> list[tuple[int, str]]:
     with open(path, newline="", encoding="utf-8") as f:

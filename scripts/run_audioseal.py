@@ -24,18 +24,33 @@ from pathlib import Path
 from attacks.compression import compression_attacks
 from methods.audioseal_method import AudioSealWatermarker
 from scripts.common import (
-    MESSAGE, append_rows, bit_accuracy, bits_from_str, done_keys, find_track,
-    is_detected, load_audio, read_selection, snr_db, write_wav,
+    MESSAGE,
+    append_rows,
+    bit_accuracy,
+    bits_from_str,
+    done_keys,
+    find_track,
+    is_detected,
+    load_audio,
+    read_selection,
+    snr_db,
+    write_wav,
 )
 
 
 def main() -> None:
-    p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    p = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     p.add_argument("--wav-dir", type=Path, help="folder with mono 44.1 kHz WAVs (000002.wav)")
     p.add_argument("--fma-dir", type=Path, help="fma_small folder with the original mp3 files")
     p.add_argument("--out", type=Path, default=Path("results/results_audioseal.csv"))
-    p.add_argument("--neural", action="store_true", help="also run the EnCodec attack (pip install encodec)")
-    p.add_argument("--no-negative", action="store_true", help="skip the 'unwatermarked' control row")
+    p.add_argument(
+        "--neural", action="store_true", help="also run the EnCodec attack (pip install encodec)"
+    )
+    p.add_argument(
+        "--no-negative", action="store_true", help="skip the 'unwatermarked' control row"
+    )
     p.add_argument("--save-wm-dir", type=Path, help="optionally save watermarked WAVs here")
     p.add_argument("--limit", type=int, help="only the first N tracks (for a quick test)")
     p.add_argument("--device", default=None)
@@ -67,9 +82,17 @@ def main() -> None:
 
         def row(attack: str, params: str, prob: float, bits) -> dict:
             acc = bit_accuracy(bits, message)
-            return {"method": "audioseal", "attack": attack, "params": params, "genre": genre,
-                    "track_id": tid, "detected": int(is_detected(acc)), "snr": round(snr, 3),
-                    "bit_acc": round(acc, 4), "detect_prob": round(prob, 4)}
+            return {
+                "method": "audioseal",
+                "attack": attack,
+                "params": params,
+                "genre": genre,
+                "track_id": tid,
+                "detected": int(is_detected(acc)),
+                "snr": round(snr, 3),
+                "bit_acc": round(acc, 4),
+                "detect_prob": round(prob, 4),
+            }
 
         rows = []
         if need_negative:
@@ -80,7 +103,8 @@ def main() -> None:
         append_rows(args.out, rows)
 
         summary = " ".join(f"{r['attack']}/{r['params']}={r['detected']}" for r in rows)
-        print(f"[{i}/{len(tracks)}] {tid} {genre} snr={snr:.1f}dB {time.time() - t0:.1f}s  {summary}")
+        elapsed = time.time() - t0
+        print(f"[{i}/{len(tracks)}] {tid} {genre} snr={snr:.1f}dB {elapsed:.1f}s  {summary}")
 
     print(f"done -> {args.out}")
 

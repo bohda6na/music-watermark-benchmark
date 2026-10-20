@@ -14,11 +14,7 @@ from __future__ import annotations
 
 import os
 
-# AudioSeal 0.2 wraps its layers in torch.compile, which needs a C++ compiler
-# (fails on Windows without MSVC) and gives no real speed-up for a few dozen tracks.
-os.environ.setdefault("NO_TORCH_COMPILE", "1")
-
-import numpy as np  # noqa: E402
+import numpy as np
 import torch
 
 from scripts.common import SR, resample
@@ -30,6 +26,10 @@ class AudioSealWatermarker:
     name = "audioseal"
 
     def __init__(self, device: str | None = None):
+        # AudioSeal 0.2 wraps its layers in torch.compile, which needs a C++ compiler
+        # (fails on Windows without MSVC) and gives no real speed-up for a few dozen tracks.
+        # The flag is read when audioseal is imported, so set it before the import.
+        os.environ.setdefault("NO_TORCH_COMPILE", "1")
         from audioseal import AudioSeal
 
         self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
@@ -37,7 +37,9 @@ class AudioSealWatermarker:
         self.detector = AudioSeal.load_detector("audioseal_detector_16bits").to(self.device).eval()
 
     def _tensor(self, x: np.ndarray) -> torch.Tensor:
-        return torch.from_numpy(np.ascontiguousarray(x, dtype=np.float32))[None, None].to(self.device)
+        return torch.from_numpy(np.ascontiguousarray(x, dtype=np.float32))[None, None].to(
+            self.device
+        )
 
     @torch.no_grad()
     def embed(self, x: np.ndarray, message: np.ndarray, sr: int = SR) -> np.ndarray:

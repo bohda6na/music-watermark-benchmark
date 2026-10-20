@@ -27,8 +27,7 @@ def _ffmpeg_roundtrip(x: np.ndarray, sr: int, codec_args: list[str], ext: str) -
     with tempfile.TemporaryDirectory() as tmp:
         src, enc = Path(tmp) / "in.wav", Path(tmp) / f"out{ext}"
         write_wav(src, x, sr)
-        cmd = [ffmpeg_exe(), "-v", "error", "-y", "-i", str(src), "-ac", "1",
-               *codec_args, str(enc)]
+        cmd = [ffmpeg_exe(), "-v", "error", "-y", "-i", str(src), "-ac", "1", *codec_args, str(enc)]
         subprocess.run(cmd, capture_output=True, check=True)
         y = ffmpeg_decode(enc, sr)
     return fit_length(y, len(x))
