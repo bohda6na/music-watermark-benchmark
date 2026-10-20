@@ -1,0 +1,9 @@
+# AudioSeal + compression attacks. Tested with Python 3.12, torch 2.14 (CPU).
+# On Colab torch, numpy, scipy and ffmpeg are already installed.
+torch>=2.1
+audioseal==0.2.0
+numpy
+scipy
+soundfile
+imageio-ffmpeg  # bundled ffmpeg (with libmp3lame + aac), used only if ffmpeg is not on PATH
+encodec==0.1.1  # optional: neural codec attack (--neural)

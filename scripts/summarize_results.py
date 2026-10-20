@@ -5,6 +5,7 @@ Usage:
 
 Expected CSV columns: method, attack, params, genre, track_id, detected, snr, bit_acc
 """
+
 import sys
 
 import pandas as pd
@@ -22,8 +23,7 @@ def main(path):
 
     # 1. File integrity
     print(f"file: {path}")
-    print(f"rows: {len(d)}, tracks: {d['track_id'].nunique()}, "
-          f"genres: {d['genre'].nunique()}")
+    print(f"rows: {len(d)}, tracks: {d['track_id'].nunique()}, genres: {d['genre'].nunique()}")
     print("rows per track (count of tracks):")
     print(d.groupby("track_id").size().value_counts().to_string())
     n_dup = d.duplicated(["method", "track_id", "attack", "params"]).sum()
@@ -42,8 +42,10 @@ def main(path):
         s["snr"] = s["snr"].astype(float)
         print("\nSNR after embedding, no attack (dB):")
         print(s.groupby("genre")["snr"].agg(["mean", "median", "min", "max"]).round(1).to_string())
-        print(f"all tracks: mean {s['snr'].mean():.1f}, "
-              f"min {s['snr'].min():.1f}, max {s['snr'].max():.1f}")
+        print(
+            f"all tracks: mean {s['snr'].mean():.1f}, "
+            f"min {s['snr'].min():.1f}, max {s['snr'].max():.1f}"
+        )
 
 
 if __name__ == "__main__":
