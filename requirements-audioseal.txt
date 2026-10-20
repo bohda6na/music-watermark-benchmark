@@ -1,5 +1,13 @@
-# AudioSeal + compression attacks. Tested with Python 3.12, torch 2.14 (CPU).
+# AudioSeal + compression attacks. Tested with Python 3.12, torch 2.14
+# (CPU, and CUDA 12.6 on an RTX 4060 Laptop GPU).
 # On Colab torch, numpy, scipy and ffmpeg are already installed.
+#
+# NVIDIA GPU on Windows/Linux: plain `pip install torch` on Windows gives a CPU-only build.
+# Install the CUDA build FIRST, then this file:
+#   pip install torch --index-url https://download.pytorch.org/whl/cu126
+#   pip install -r requirements-audioseal.txt
+# Check: python -c "import torch; print(torch.cuda.is_available())"  -> True
+# The scripts then use the GPU automatically (or pass --device cpu / --device cuda).
 torch>=2.1
 audioseal==0.2.0
 numpy
