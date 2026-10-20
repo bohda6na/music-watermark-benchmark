@@ -1,11 +1,11 @@
-# Runtime dependencies, pinned for reproducibility.
-# Regenerate with `pip freeze` inside a fresh venv if you deliberately upgrade something —
-# don't hand-bump a single version without re-testing `make reproduce`.
-numpy==2.5.2
-pandas==3.0.5
-scikit-learn==1.9.0
-matplotlib==3.11.1
-joblib==1.5.3
-PyYAML==6.0.3
-streamlit==1.61.1
-huggingface_hub==1.27.0
+# Runtime dependencies for audiowmark runs, time/dynamics attacks and result summaries.
+# audiowmark itself is a separate program (see README, Quick start).
+# AudioSeal / EnCodec dependencies: requirements-audioseal.txt
+# Regenerate with `pip freeze` in the environment the results were produced in
+# (Colab), if you deliberately upgrade something.
+numpy==2.4.4
+scipy==1.17.1
+pandas==3.0.2
+imageio-ffmpeg==0.6.0  # bundled ffmpeg, used only if ffmpeg is not on PATH
+soundfile
+librosa

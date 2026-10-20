@@ -11,7 +11,8 @@ readme = "README.md"
 license = { text = "MIT" }
 
 [tool.setuptools.packages.find]
-where = ["src"]
+where = ["."]
+include = ["attacks*", "methods*", "scripts*"]
 
 [tool.black]
 line-length = 100
