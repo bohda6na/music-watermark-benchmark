@@ -1,6 +1,6 @@
-# 🍷 wine-origin-classifier
+# Robust Music Watermarking: Extended Benchmark
 
-Predicts which of 3 grape cultivars a wine came from, using 13 chemical measurements — a small, complete, fully-reproducible example project built from [`ucu-ai-course/project-template`](https://github.com/ucu-ai-course/project-template).
+A benchmark that checks whether audio watermarks survive realistic transformations of **music**, across genres. Built from [`ucu-ai-course/project-template`](https://github.com/ucu-ai-course/project-template). Semester project, course "Artificial Intelligence", Ukrainian Catholic University (2026).
 
 ![lint](https://github.com/ucu-ai-course/project-template/actions/workflows/lint.yml/badge.svg)
 ![license](https://img.shields.io/badge/license-MIT-blue.svg)
@@ -18,16 +18,19 @@ Predicts which of 3 grape cultivars a wine came from, using 13 chemical measurem
 
 | Name | GitHub | Role |
 |---|---|---|
-| Oleksandr Kosovan | [@OleksandrKosovan](https://github.com/OleksandrKosovan) | Data pipeline, modeling, evaluation |
-| Slavko Prytula | [@SlavkoPrytula](https://github.com/SlavkoPrytula) | CLI, Streamlit app, CI/CD |
+| Iryna Svyrydenko | [@irasvyrydenko](https://github.com/irasvyrydenko) | AudioSeal, compression attacks, review of RAW-Bench |
+| Lili Alania | [@lilialania](https://github.com/LiliAlania) | WavMark, noise and filtering attacks, review of AudioMarkBench |
+| Bohdana Zubrytska | [@bohda6na](https://github.com/bohda6na) | audiowmark, time and dynamics attacks, metrics |
+
+### Mentor: Olesia Omelchuk
 
 ## Problem and motivation
 
-Wine composition is routinely measured in a lab (alcohol content, phenols, color intensity, and so on), but the cultivar a bottle actually comes from isn't always recorded reliably further down the supply chain. This project asks a narrow, checkable question: given only the chemistry, can a simple model recover the cultivar? It's a deliberately small, well-understood problem — the point of this repository is to demonstrate a complete, reproducible ML project structure end to end, not to push the state of the art on wine chemistry.
+Audio watermarking embeds an inaudible identifier into a signal. It is used to label AI-generated music and to protect creators' rights. Most existing methods were designed and evaluated on speech, and their robustness is usually measured in lab conditions rather than under transformations a real track meets (streaming compression, tempo changes, noise). Existing benchmarks (RAW-Bench, AudioMarkBench) cover this only partly, and none focuses on music across genres. This project builds a music-focused benchmark and compares several watermarking methods under identical attacks.
 
 ## Data
 
-178 samples, 13 numeric chemical features, 3 balanced-ish classes, sourced from the UCI Wine Recognition dataset via `sklearn.datasets.load_wine`. No missing values, no personal data, no licensing restrictions beyond standard academic citation. Full data card, schema, and checksum: [`data/README.md`](data/README.md).
+FMA-small: 8,000 tracks, 30 s each, 8 balanced genres. Source: https://github.com/mdeff/fma. Test subset: the first 10 tracks (by sorted `track_id`) of each genre, 80 tracks in total (`data/selected_80.csv`). Audio is not stored in this repository. Licences and download instructions: [`data/README.md`](data/README.md).
 
 > [!note] Why this matters: data isn't part of this git repo
 > `data/`, like `models/`, is gitignored. Committing raw data bloats the repo forever (`git rm` doesn't remove history — see `data/README.md`), makes diffs unreadable, and often runs into licenses that don't actually permit redistribution. Instead, `data/raw/CHECKSUMS.txt` **is** committed — a few bytes that let anyone verify they regenerated the exact same data, without the data itself ever touching git.
@@ -36,20 +39,36 @@ Wine composition is routinely measured in a lab (alcohol content, phenols, color
 
 ```mermaid
 flowchart LR
-    A["load_wine()"] --> B["data/raw/wine.csv\ndownload_data.py"]
-    B --> C["stratified 80/20 split\nseed=42"]
-    C --> D["StandardScaler +\nLogisticRegression\ncli.py train"]
-    C --> E["baseline / random forest / SVM\nrun_experiment.py"]
-    D --> F["results/metrics.json\n+ confusion matrix"]
-    E --> F
-    F --> G["Streamlit demo"]
+    A["FMA-small"] --> B["select 80 tracks"]
+    B --> C["WAV mono 44.1 kHz"]
+    C --> D["embed 16-bit message"]
+    D --> E["attacks"]
+    E --> F["detect"]
+    F --> G["results/*.csv"]
+    G --> H["method x attack x genre"]
 ```
 
-Baseline (`DummyClassifier`) → primary model (`StandardScaler` + `LogisticRegression`) → comparison model (`RandomForestClassifier`) → a fourth model we tried and rejected (`SVC`, default hyperparameters). See [`results/experiments.md`](results/experiments.md) for the full comparison, including the rejected run.
+Methods, all embedding the same 16-bit message:
+- audiowmark (classical, spread spectrum)
+- AudioSeal (neural) [status: ...]
+- WavMark (neural) [status: ...]
+
+Attacks, with the same parameters for every method:
+- Time and dynamics (implemented in `src/[...]/attacks.py`): speed change, time stretch, pitch shift, gain, crop
+- Compression, noise and filtering: implemented by teammates [status: ...]
+
+Metrics: robustness is the share of tracks where the watermark is still detected (bit accuracy at least 14/16). Audio quality is the SNR between the original and the watermarked track. Details: [`docs/metrics.md`](docs/metrics.md).
 
 ## Results
 
-Test set (36 held-out samples) and 5-fold cross-validation, seed=42. Generated by `python scripts/run_experiment.py` on 2026-08-09; reproduce with `make reproduce` (prints the primary model's numbers) or `python scripts/run_experiment.py` (full table below).
+Preliminary results for audiowmark on 80 tracks (10 per genre):
+- No attack, gain of -6 dB and +6 dB, crop to 50%: watermark detected in all 80 tracks.
+- Speed change, time stretch and pitch shift: not detected in any track, even for mild changes (5% and 1 semitone).
+- With the `--detect-speed` option, speed changes of 0.9x and 1.1x are fully compensated (detection 100%, bit accuracy 1.0). This option was tested separately and is not part of the main comparison, because the other methods have no equivalent.
+- SNR after embedding: mean 31.0 dB (range 25.5 to 51.0). The mean per genre lies between 29.9 dB (Hip-Hop) and 33.8 dB (Electronic).
+
+Limitations: pilot sample of 80 tracks, one method so far, one fixed message and embedding strength, no listening tests (SNR does not measure perceived quality), and genre-level conclusions are preliminary. Raw results: `results/`. Experiments notebook: `notebooks/`.
+
 
 | Model | Test accuracy | Test macro-F1 | CV accuracy (mean ± std) |
 |---|---|---|---|
@@ -69,11 +88,16 @@ Test set (36 held-out samples) and 5-fold cross-validation, seed=42. Generated b
 ## Quick start
 
 ```bash
-git clone <repo-url> && cd wine-origin-classifier
-make setup                          # creates .venv, installs deps, installs pre-commit hooks
-make reproduce                      # data -> train -> evaluate; should print accuracy=0.9722 macro_f1=0.9710
-source .venv/bin/activate           # everything past this point assumes the venv is active
-streamlit run app/streamlit_app.py  # opens the demo at localhost:8501
+git clone https://github.com/bohda6na/music-watermark-benchmark.git
+cd music-watermark-benchmark
+pip install -e .
+```
+
+audiowmark must be installed separately (https://github.com/swesterfeld/audiowmark). The pipeline was tested on Linux (Google Colab). WAV files are mono, 44.1 kHz, converted from the FMA mp3 files with ffmpeg.
+
+```bash
+python scripts/select_tracks.py
+python scripts/run_benchmark.py --wav-dir <path-to-wav-folder> --out results/results_audiowmark.csv
 ```
 
 > [!important]
@@ -92,30 +116,27 @@ ruff check . && ruff format --check .
 
 ## Repository structure
 
+## Repository structure
+
 ```
 .
-├── src/wine_origin/     # the package: config, data, models, evaluate, cli.py (the single entry point)
-├── scripts/              # download_data.py, run_experiment.py
-├── app/                  # streamlit_app.py — the interactive demo (see app/README.md)
-├── notebooks/             # 01-04, executed, narrative-first (see notebooks/README.md)
-├── tests/                 # test_data.py, test_models.py, test_reproducibility.py
-├── config/default.yaml    # every hyperparameter, path, and the seed — nothing hardcoded in src/
-├── data/                  # raw data NOT committed; data/README.md (data card) IS
-├── models/                # trained weights NOT committed; models/README.md (HF Hub instructions) IS
-├── results/               # metrics.json + experiments.md + figures/ — all committed, all small
-├── docs/                  # proposal/, poster/, slides/, CONTRIBUTING.md, and this file's supporting docs
-└── .github/workflows/     # lint.yml — one CI example, easy to extend (see its comments)
+├── src/[...]/      # attacks, metrics, method wrappers
+├── scripts/         # track selection, benchmark runs
+├── notebooks/       # experiments with explanations
+├── data/            # selected_80.csv, data card (audio is not committed)
+├── results/         # CSV files with results
+├── docs/            # proposal, metrics, poster, slides
+└── tests/           # tests for attacks and metrics
 ```
 
 Everything above (except the placeholders in `docs/proposal|poster|slides/`) is real, executed, working content — clone it and run it, don't take our word for it.
 
 ## Reproducibility
 
-- **Seed**: `42`, set once in `config/default.yaml`, applied via `wine_origin.utils.set_seed()` to both `random` and `numpy`.
-- **Versions**: Python 3.13.14; see `requirements.txt` for pinned package versions. Every run's exact versions + OS + git commit are captured by `wine_origin.utils.env_info()` and written into `results/metrics.json`'s `env` field — that's what "reproducible" is checked against, not just claimed.
-- **OS tested on**: macOS (arm64) locally; `.github/workflows/lint.yml` also runs on Ubuntu (`ubuntu-latest`) on every push — add a `test.yml` alongside it the same way if you want CI to run `pytest` too, not just lint.
-- **Runtime**: `make reproduce` takes well under a minute on a laptop — no GPU needed, no dataset download beyond what's bundled in scikit-learn.
-- **Known limitations**: 178 samples total means wide uncertainty on any single metric — see the CV std columns in the results table, and treat any one number with the same caution `results/experiments.md` applies to the random-forest test-set score.
+- Fixed message `a5c3` (16 bits), embedding strength left at the default (10).
+- Detection threshold: bit accuracy at least 14/16.
+- Result files are CSV with the columns `method, attack, params, genre, track_id, detected, snr, bit_acc`. This format is shared by all team members.
+
 
 > [!note] Why this matters: a seed alone isn't reproducibility
 > Fixing the seed makes a run *repeatable* on your own machine. It's `env_info()` — capturing exact library versions, OS, and the git commit — that makes it *reproducible* somewhere else, months later, when a library's default behavior has quietly changed underneath an unpinned dependency.
@@ -147,8 +168,9 @@ Pre-commit hooks (installed by `make setup`) catch most of this before you even 
 
 | Member | Contribution | Responsible for |
 |---|---|---|
-| Oleksandr Kosovan | 50% | `src/wine_origin/` (data, models, evaluate), `scripts/run_experiment.py`, notebooks 01–03, tests |
-| Slavko Prytula | 50% | `cli.py`, `app/streamlit_app.py`, CI workflow, `docs/`, notebook 04, this README |
+| Iryna Svyrydenko | 33,33% | `src/wine_origin/` (data, models, evaluate), `scripts/run_experiment.py`, notebooks 01–03, tests |
+| Lili Alania | 33,33% | `cli.py`, `app/streamlit_app.py`, CI workflow, `docs/`, notebook 04 |
+| Bohdana Zubrytska | 33,33% | audiowmark as the third method, time and dynamics attacks, metrics and thresholds, runs on the 80-track subset, repository structure, this README |
 
 Both members agree with the above distribution.
 
