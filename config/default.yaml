@@ -1,39 +1,58 @@
-# All the numbers and paths a run needs, in one place — nothing below should be
-# hardcoded in src/. Override any key from the CLI, e.g.:
-#   python -m wine_origin train --override model.random_forest.n_estimators=300
+# Experiment settings for the audiowmark run on FMA-small.
+# Every value below is copied from notebooks/01_audiowmark_baseline.ipynb
+# (sections 2, 3, 6, 8, 10). If you change the notebook, change this file too.
+# There is no random seed: our code has no random components. The test
+# subset is chosen by a deterministic rule (see data.selection).
 
-seed: 42
+data:
+  dataset: FMA-small               # 8,000 tracks * 30 s, 8 genres, 1,000 per genre
+  source_url: https://github.com/mdeff/fma
+  selection: first_n_per_genre_sorted_by_track_id
+  tracks_per_genre: 10             # first 10 track ids of each genre
+  n_genres: 8
+  n_tracks: 80                     # 8 genres * 10 tracks
+  selection_file: selected_80.csv  # columns: track_id, genre
+  archive_sha1: ade154f733639d52e35e32f5593efe5be76c6d70   # fma_small.zip
+  raw_dir: data/raw                # gitignored, audio is NOT committed
 
-paths:
-  raw_data: data/raw/wine.csv
-  checksums: data/raw/CHECKSUMS.txt
-  model: models/model.joblib
-  metrics: results/metrics.json
-  confusion_matrix: results/figures/confusion_matrix.png
-  experiments_log: results/experiments.md
+audio:
+  channels: 1                      # mono
+  sample_rate: 44100               # Hz
+  format: wav                      # converted from the original FMA mp3 files
 
-split:
-  test_size: 0.2
-  stratify: true
+watermark:
+  method: audiowmark               # classical spread-spectrum, GPL, run as an external CLI
+  mode: short                      # audiowmark "--short 16" (16-bit message)
+  bits: 16
+  message_hex: a5c3                # same message for every track
+  strength: 10                     # audiowmark default, not changed
 
-cv:
-  n_splits: 5
+detection:
+  rule: bit_accuracy_threshold     # detected = bit accuracy >= threshold
+  threshold: 0.875                 # 14/16; chance of a random match is about 0.2%
+  not_found_is_undetected: true    # if audiowmark prints nothing: detected=False, bit_acc is empty
 
-model:
-  # Which model `train`/`predict` use by default. "logistic_regression" is the
-  # best-performing of the models we compared — see results/experiments.md.
-  active: logistic_regression
-  logistic_regression:
-    max_iter: 1000
-    C: 1.0
-  random_forest:
-    n_estimators: 200
-    max_depth: null
+metrics:
+  snr_db: "10 * log10( sum(x^2) / sum((x - x_w)^2) )"   # x = original, x_w = watermarked, no attack
 
-logging:
-  level: INFO
+# Attack parameters. They must be identical for every method in the team benchmark.
+attacks:
+  none: [null]                     # baseline, no attack
+  speed: [0.9, 0.95, 1.05, 1.1]    # resampling, changes tempo AND pitch
+  time_stretch: [0.9, 0.95, 1.05, 1.1]   # changes tempo, keeps pitch (librosa)
+  pitch: [-2, -1, 1, 2]            # semitones (librosa)
+  gain: [-6, 6]                    # dB, samples clipped to [-1, 1]
+  crop: [0.5]                      # keep the first 50% of the track
+# 1 + 4 + 4 + 4 + 2 + 1 = 16 variants per track -> 80 x 16 = 1280 rows
 
-# Only used if you publish the model to Hugging Face Hub (see models/README.md).
-# Leave repo_id blank to disable the HF fallback in load_model().
-huggingface:
-  repo_id: ""
+# Extra experiment (notebook section 10): audiowmark --detect-speed
+extra_experiment:
+  method_label: audiowmark+detect-speed
+  attack: speed
+  params: [0.9, 1.1]               # only these two values, the option is slower
+  # 80 tracks x 2 values = 160 rows
+
+outputs:
+  main_csv: results/results_audiowmark.csv                       # 1280 rows
+  detect_speed_csv: results/results_audiowmark_detect_speed.csv  # 160 rows
+  csv_columns: [method, attack, params, genre, track_id, detected, snr, bit_acc]
