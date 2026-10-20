@@ -3,9 +3,9 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "wine-origin"
+name = "music-watermark-benchmark"
 version = "0.1.0"
-description = "Wine cultivar classification example project (course template)"
+description = "Benchmark of robustness of audio watermarking methods on music (FMA-small)"
 requires-python = ">=3.11"
 readme = "README.md"
 license = { text = "MIT" }
