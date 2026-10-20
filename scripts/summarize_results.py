@@ -18,8 +18,8 @@ def main(path):
     # (message not found) stay as empty strings instead of becoming NaN.
     d = pd.read_csv(path, keep_default_na=False)
 
-    # "detected" is saved as True/False; compare as text to be safe.
-    d["detected"] = d["detected"].astype(str).eq("True")
+    # "detected" may be saved as True/False or 1/0; accept both.
+    d["detected"] = d["detected"].astype(str).str.lower().isin({"true", "1"})
 
     # 1. File integrity
     print(f"file: {path}")
