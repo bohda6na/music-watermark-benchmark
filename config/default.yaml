@@ -45,6 +45,14 @@ attacks:
   crop: [0.5]                      # keep the first 50% of the track
 # 1 + 4 + 4 + 4 + 2 + 1 = 16 variants per track -> 80 x 16 = 1280 rows
 
+# Compression attacks (attacks/compression.py). Encode with ffmpeg, decode back to
+# mono 44.1 kHz; output has the same length as the input (checked: no time shift).
+compression_attacks:
+  mp3: [128, 64, 32]               # kbps, constant bitrate, LAME (libmp3lame)
+  aac: [128, 64, 32]               # kbps, AAC-LC, ffmpeg native encoder, .m4a
+  encodec: [24, 12, 6, 3, 1.5]     # kbps, optional neural codec (EnCodec 24 kHz), --neural
+# 3 + 3 = 6 variants per track (+5 with --neural)
+
 # Extra experiment (notebook section 10): audiowmark --detect-speed
 extra_experiment:
   method_label: audiowmark+detect-speed

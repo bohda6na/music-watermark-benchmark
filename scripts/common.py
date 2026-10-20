@@ -19,7 +19,8 @@ import soundfile as sf
 from scipy.signal import resample_poly
 
 SR = 44100
-MESSAGE = "1011001110001101"  # shared 16-bit message, same for all methods
+MESSAGE_HEX = "a5c3"  # shared 16-bit message, same for all methods (config/default.yaml)
+MESSAGE = f"{int(MESSAGE_HEX, 16):016b}"  # "1010010111000011", most significant bit first
 DETECT_MIN_BITS = 14  # detected if at least 14 of 16 bits are correct
 
 CSV_COLUMNS = [
