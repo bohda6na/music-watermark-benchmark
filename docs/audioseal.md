@@ -11,7 +11,9 @@ Owner: Iryna Svyrydenko.
 - `scripts/common.py` – shared helpers: audio loading, SNR, bit accuracy, the shared
   16-bit message, CSV writing.
 - `scripts/audioseal_smoke_test.py` – embed/detect check on 5 tracks (5 genres).
-- `scripts/run_audioseal.py` – full run on the 80 tracks → `results/results_audioseal.csv`.
+- `scripts/run_audioseal.py` – full run on the 80 tracks → `results/results_audioseal.csv`:
+  no attack, the compression attacks and the time and dynamics attacks from
+  `attacks/time_dynamics.py` (28 rows per track with `--neural`, 23 without).
 
 ## How to run
 

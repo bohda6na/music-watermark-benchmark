@@ -1,4 +1,4 @@
-"""Run AudioSeal on the 80 selected tracks: no attack + compression attacks -> CSV.
+"""Run AudioSeal on the 80 selected tracks: no attack, compression, time and dynamics -> CSV.
 
 For each track: embed the shared 16-bit message, compute SNR(original, watermarked),
 then detect after every attack. One CSV row per (track, attack, params):
@@ -22,6 +22,7 @@ import time
 from pathlib import Path
 
 from attacks.compression import compression_attacks
+from attacks.time_dynamics import time_dynamics_attacks
 from methods.audioseal_method import AudioSealWatermarker
 from scripts.common import (
     MESSAGE,
@@ -58,7 +59,11 @@ def main() -> None:
     if not args.wav_dir and not args.fma_dir:
         p.error("give --wav-dir or --fma-dir")
 
-    attacks = [("none", "-", lambda x: x)] + compression_attacks(include_neural=args.neural)
+    attacks = (
+        [("none", "-", lambda x: x)]
+        + compression_attacks(include_neural=args.neural)
+        + time_dynamics_attacks()
+    )
     tracks = read_selection()[: args.limit]
     message = bits_from_str(MESSAGE)
     done = done_keys(args.out)
