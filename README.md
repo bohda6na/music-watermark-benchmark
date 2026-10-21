@@ -38,18 +38,20 @@ All methods embed the same 16-bit message and are attacked with the same paramet
 | Method | Type | Status |
 |---|---|---|
 | audiowmark | classical, frequency-domain (patchwork) | done: 80 tracks, time and dynamics attacks |
-| AudioSeal | neural | wrapper, smoke test and run script in the repo; full results pending |
+| AudioSeal | neural | done: 80 tracks, compression attacks |
 | WavMark | neural | in progress |
 
 | Attack group | Attacks and parameters | Code | Status |
 |---|---|---|---|
 | Time and dynamics | speed 0.9 / 0.95 / 1.05 / 1.1x, time stretch (same rates), pitch shift ±1 / ±2 semitones, gain ±6 dB, crop to 50% | `attacks/time_dynamics.py` | done |
-| Compression | MP3 and AAC at 128 / 64 / 32 kbps, optional EnCodec | `attacks/compression.py` | implemented |
+| Compression | MP3 and AAC at 128 / 64 / 32 kbps, EnCodec (neural codec) at 24 / 12 / 6 / 3 / 1.5 kbps | `attacks/compression.py` | done |
 | Noise and filtering | Gaussian noise (30 / 20 / 10 dB SNR), low-pass / high-pass, reverb | not in the repo yet | in progress |
 
 Metrics: robustness is the share of tracks where the watermark is still detected (bit accuracy at least 14/16). Audio quality is the SNR between the original and the watermarked track. Details: [`docs/metrics.md`](docs/metrics.md).
 
 ## Results
+
+### audiowmark
 
 Preliminary results for audiowmark on 80 tracks (10 per genre), default embedding strength:
 
@@ -66,7 +68,39 @@ Preliminary results for audiowmark on 80 tracks (10 per genre), default embeddin
 - With the `--detect-speed` option, speed changes of 0.9x and 1.1x are fully compensated (detection 1.0). It is tested separately and is not part of the main comparison, because AudioSeal and WavMark have no equivalent.
 - SNR after embedding: mean 31.0 dB (range 25.5 to 51.0). Genre means lie between 29.9 dB (Hip-Hop) and 33.8 dB (Electronic).
 
-Limitations: 80 tracks, so genre-level conclusions are preliminary (for every attack so far the detection rate is 0 or 1 in all genres); one fixed message and embedding strength; no listening tests (SNR does not measure perceived quality); the source files are already mp3 decoded to WAV. AudioSeal and WavMark results will be added after the CSV files are merged. Details and raw files: [`results/`](results/README.md).
+### AudioSeal
+
+Results for AudioSeal on the same 80 tracks, compression attacks
+(`results/results_audioseal.csv`, 13 rows per track). AudioSeal gives two outputs, and we report both:
+
+- **message read**: at least 14 of 16 bits correct, the shared team criterion (`detected` column);
+- **watermark found**: AudioSeal's own detector, probability > 0.5 (`detect_prob` column).
+
+| Attack | Parameters | Message read | Watermark found |
+|---|---|---|---|
+| none | - | 0.64 | 1.00 |
+| MP3 | 128 / 64 / 32 kbps | 0.62 / 0.60 / 0.59 | 1.00 / 1.00 / 1.00 |
+| AAC | 128 / 64 / 32 kbps | 0.61 / 0.65 / 0.50 | 1.00 / 1.00 / 1.00 |
+| EnCodec | 24 / 12 kbps | 0.39 / 0.28 | 0.99 / 0.99 |
+| EnCodec | 6 / 3 / 1.5 kbps | 0.01 / 0.00 / 0.00 | 0.30 / 0.16 / 0.02 |
+| unwatermarked track (control) | - | 0.00 | 0.00 |
+
+Message read with no attack, by genre (10 tracks each):
+
+| Electronic | Folk | Instrumental | Pop | Hip-Hop | International | Rock | Experimental |
+|---|---|---|---|---|---|---|---|
+| 0.9 | 0.8 | 0.7 | 0.7 | 0.6 | 0.6 | 0.5 | 0.3 |
+
+- **The watermark itself survives MP3 and AAC at every bitrate, in every genre** (found in 100% of tracks). The EnCodec neural codec removes it at 6 kbps and below.
+- **The 16-bit message is the weak point, and the loss happens at embedding, not under attack.** With no attack only 51 of 80 tracks give at least 14/16 bits; MP3 and AAC change the mean by at most 0.5 bit. AudioSeal was trained on speech, which is the gap this project is about.
+- **Genre matters for the message, not for detection.** Mean correct bits with no attack range from 13.3 (Experimental, Rock) to 15.2 (Folk); the watermark is found in 100% of tracks in every genre.
+- **No false positives**: on unwatermarked tracks the message criterion and the detector never fire (mean 7.7 of 16 bits correct, i.e. chance).
+- SNR after embedding: mean 25.5 dB (range 19.7 to 39.3), lower than audiowmark (31.0 dB). Genre means lie between 24.3 dB (Hip-Hop) and 27.3 dB (International).
+- The 14/16 rule is stricter for AudioSeal than its own detector, so a comparison with audiowmark on the `detected` column alone understates AudioSeal for "is this track watermarked?".
+
+Not tested yet: AudioSeal under the time and dynamics attacks, and audiowmark under the compression attacks; both are needed for the full method x attack table.
+
+Limitations: 80 tracks, so genre-level conclusions are preliminary (one track is 10 percentage points within a genre); one fixed message and embedding strength; no listening tests (SNR does not measure perceived quality); the source files are already mp3 decoded to WAV. WavMark results will be added after the CSV file is merged. Details and raw files: [`results/`](results/README.md).
 
 ## Quick start
 
@@ -91,7 +125,7 @@ python -m scripts.run_audiowmark --wav-dir <wav-folder> --out results/results_au
 python scripts/summarize_results.py results/results_audiowmark.csv    # or: make reproduce
 ```
 
-AudioSeal: `python -m scripts.run_audioseal --wav-dir <wav-folder> --out results/results_audioseal.csv` (see [`docs/audioseal.md`](docs/audioseal.md)).
+AudioSeal: `python -m scripts.run_audioseal --wav-dir <wav-folder> --neural --out results/results_audioseal.csv` (see [`docs/audioseal.md`](docs/audioseal.md)). It runs on an NVIDIA GPU automatically if the CUDA build of torch is installed (see `requirements-audioseal.txt`): about 6 s per track on an RTX 4060 Laptop, about 36 s on CPU.
 
 ## Repository structure
 
