@@ -1,4 +1,6 @@
-"""Run audiowmark on the 80 selected tracks: no attack + time/dynamics attacks -> CSV.
+"""Run audiowmark on the 80 selected tracks: no attack + all attack groups -> CSV.
+
+Attack groups: time/dynamics, compression (mp3, aac, optional encodec), noise/filtering.
 
 One CSV row per (track, attack, params), same columns as the other methods:
 
@@ -19,13 +21,13 @@ The script appends to the CSV and skips rows that already exist, so it can be re
 """
 
 from __future__ import annotations
-from attacks.compression import compression_attacks
-from attacks.time_dynamics import time_dynamics_attacks
 
 import argparse
 import time
 from pathlib import Path
 
+from attacks.compression import compression_attacks
+from attacks.noise_filtering import noise_filtering_attacks
 from attacks.time_dynamics import time_dynamics_attacks
 from methods.audiowmark_method import AudiowmarkWatermarker
 from scripts.common import (
@@ -60,7 +62,12 @@ def main() -> None:
     if not args.wav_dir and not args.fma_dir:
         p.error("give --wav-dir or --fma-dir")
 
-    attacks = [("none", "-", lambda x: x)] + time_dynamics_attacks() + compression_attacks()
+    attacks = (
+        [("none", "-", lambda x: x)]
+        + time_dynamics_attacks()
+        + compression_attacks()
+        + noise_filtering_attacks()
+    )
     if args.attacks:
         attacks = [a for a in attacks if a[0] in args.attacks]
     if args.params:
@@ -109,7 +116,8 @@ def main() -> None:
         append_rows(args.out, rows)
 
         summary = " ".join(f"{r['attack']}/{r['params']}={r['detected']}" for r in rows)
-        print(f"[{i}/{len(tracks)}] {tid} {genre} snr={snr:.1f}dB {time.time() - t0:.0f}s  {summary}")
+        elapsed = time.time() - t0
+        print(f"[{i}/{len(tracks)}] {tid} {genre} snr={snr:.1f}dB {elapsed:.0f}s  {summary}")
 
     print(f"done -> {args.out}")
 
