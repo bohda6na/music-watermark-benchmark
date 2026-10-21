@@ -19,6 +19,8 @@ The script appends to the CSV and skips rows that already exist, so it can be re
 """
 
 from __future__ import annotations
+from attacks.compression import compression_attacks
+from attacks.time_dynamics import time_dynamics_attacks
 
 import argparse
 import time
@@ -58,7 +60,7 @@ def main() -> None:
     if not args.wav_dir and not args.fma_dir:
         p.error("give --wav-dir or --fma-dir")
 
-    attacks = [("none", "-", lambda x: x)] + time_dynamics_attacks()
+    attacks = [("none", "-", lambda x: x)] + time_dynamics_attacks() + compression_attacks()
     if args.attacks:
         attacks = [a for a in attacks if a[0] in args.attacks]
     if args.params:
