@@ -62,3 +62,21 @@ def reverberation(x, sr=44100, decay=0.4, delay_ms=50, repeats=5):
     y = fftconvolve(x, impulse, mode="full")[:len(x)]
 
     return y.astype(np.float32)
+
+def noise_filtering_attacks(sr=44100):
+    return [
+        ("gaussian_noise", "snr_db=30",
+         lambda x: gaussian_noise(x, 30)),
+        ("gaussian_noise", "snr_db=20",
+         lambda x: gaussian_noise(x, 20)),
+        ("gaussian_noise", "snr_db=10",
+         lambda x: gaussian_noise(x, 10)),
+        ("lowpass", "cutoff=3000",
+         lambda x: lowpass_filter(x, sr=sr)),
+        ("highpass", "cutoff=300",
+         lambda x: highpass_filter(x, sr=sr)),
+        ("reverberation", "decay=0.4,delay_ms=50,repeats=5",
+         lambda x: reverberation(
+             x, sr=sr, decay=0.4, delay_ms=50, repeats=5
+         )),
+    ]
