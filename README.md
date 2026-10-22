@@ -79,7 +79,7 @@ time/dynamics, noise/filtering (`results/results_audioseal.csv`, 34 rows per tra
 | Attack | Parameters | Message read | Watermark found |
 |---|---|---|---|
 | none | - | 0.64 | 1.00 |
-| MP3 | 128 / 64 / 32 kbps | 0.62 / 0.60 / 0.59 | 1.00 / 1.00 / 1.00 |
+| MP3 | 128 / 64 / 32 kbps | 0.63 / 0.60 / 0.59 | 1.00 / 1.00 / 1.00 |
 | AAC | 128 / 64 / 32 kbps | 0.61 / 0.65 / 0.50 | 1.00 / 1.00 / 1.00 |
 | EnCodec | 24 / 12 kbps | 0.39 / 0.28 | 0.99 / 0.99 |
 | EnCodec | 6 / 3 / 1.5 kbps | 0.01 / 0.00 / 0.00 | 0.30 / 0.16 / 0.03 |
@@ -88,7 +88,7 @@ time/dynamics, noise/filtering (`results/results_audioseal.csv`, 34 rows per tra
 | speed | 0.9x, 0.95x, 1.05x, 1.1x | 0.00 | 0.00 |
 | pitch shift | -2, -1, +1, +2 semitones | 0.00 | 0.00 |
 | time stretch | 0.9x / 0.95x / 1.05x / 1.1x | 0.05 / 0.08 / 0.40 / 0.29 | 0.00 |
-| Gaussian noise | SNR 30 / 20 / 10 dB | 0.42 / 0.33 / 0.17 | 1.00 / 1.00 / 0.96 |
+| Gaussian noise | SNR 30 / 20 / 10 dB | 0.43 / 0.33 / 0.18 | 1.00 / 1.00 / 0.96 |
 | low-pass | 3 kHz | 0.64 | 1.00 |
 | high-pass | 300 Hz | 0.70 | 1.00 |
 | reverb | 5 echoes, 50 ms, decay 0.4 | 0.64 | 1.00 |
@@ -103,7 +103,7 @@ Message read with no attack, by genre (10 tracks each):
 - **The watermark itself survives MP3 and AAC at every bitrate, in every genre** (found in 100% of tracks). The EnCodec neural codec removes it at 6 kbps and below.
 - **Speed and pitch shift remove the watermark completely**, even at 5% or one semitone, as for audiowmark. Gain and crop do not affect it (found in 100% of tracks).
 - **Filters and reverb do not hurt AudioSeal**: low-pass 3 kHz, high-pass 300 Hz and reverb keep both outputs at the no-attack level.
-- **Gaussian noise damages the message, not the detector**: the message is read in 42% of tracks at 30 dB SNR and 17% at 10 dB, while the watermark is still found in 96-100%.
+- **Gaussian noise damages the message, not the detector**: the message is read in 43% of tracks at 30 dB SNR and 18% at 10 dB, while the watermark is still found in 96-100%.
 - **Time stretch is partly survived by the message but not by the detector**: up to 40% of tracks give at least 14/16 bits (1.05x), while the detector finds the watermark in none of them. The two outputs disagree here, so this should not be read as robustness.
 - **The 16-bit message is the weak point, and the loss happens at embedding, not under attack.** With no attack only 51 of 80 tracks give at least 14/16 bits; MP3, AAC and gain change the mean by at most 0.7 bit. AudioSeal was trained on speech, which is the gap this project is about. Crop to 50% reads the message more often than no attack (0.84 vs 0.64); we have not checked why.
 - **Genre matters for the message, not for detection.** Mean correct bits with no attack range from 13.3 (Experimental, Rock) to 15.2 (Folk); the watermark is found in 100% of tracks in every genre.
@@ -126,27 +126,32 @@ pip install -r requirements.txt          # AudioSeal: pip install -r requirement
 ```
 
 1. Get the audio. Sections 1 to 3 of [`notebooks/01_audiowmark_baseline.ipynb`](notebooks/01_audiowmark_baseline.ipynb) download FMA-small and convert the 80 selected tracks to mono 44.1 kHz WAV.
-2. Run the benchmark for audiowmark (resumable, skips rows already in the CSV):
+2. Run the benchmark, one command per method. All methods share the same loop and the same attack list (`attacks.all_attacks()`); each run is resumable (skips rows already in the CSV) and writes `results/results_<method>.csv`:
 
 ```bash
-python -m scripts.run_audiowmark --wav-dir <wav-folder> --out results/results_audiowmark.csv
+python -m scripts.run_benchmark --method audiowmark --wav-dir <wav-folder>
+python -m scripts.run_benchmark --method audioseal  --wav-dir <wav-folder> --neural   # + EnCodec attack
+python -m scripts.run_benchmark --method wavmark    --wav-dir <wav-folder>
 ```
 
-3. Print the main numbers from a results file (needs only the CSV, no audio):
+Add `--limit 2` for a quick test. The older `python -m scripts.run_audioseal` / `run_audiowmark` commands still work and do the same.
+
+3. Compare the methods (needs only the CSV files, no audio). This reads every `results/results_*.csv` and writes `results/summary/comparison.md` (method x attack table with 95% intervals, false positives, SNR, genres) plus `by_attack.csv` and `by_genre.csv`:
 
 ```bash
-python scripts/summarize_results.py results/results_audiowmark.csv    # or: make reproduce
+python -m scripts.compare_methods
+python scripts/summarize_results.py results/results_audiowmark.csv    # checks of one file; or: make reproduce
 ```
 
-AudioSeal: `python -m scripts.run_audioseal --wav-dir <wav-folder> --neural --out results/results_audioseal.csv` (see [`docs/audioseal.md`](docs/audioseal.md)). It runs on an NVIDIA GPU automatically if the CUDA build of torch is installed (see `requirements-audioseal.txt`): about 6 s per track on an RTX 4060 Laptop, about 36 s on CPU.
+AudioSeal details: [`docs/audioseal.md`](docs/audioseal.md). It runs on an NVIDIA GPU automatically if the CUDA build of torch is installed (see `requirements-audioseal.txt`): about 6 s per track on an RTX 4060 Laptop, about 36 s on CPU.
 
 ## Repository structure
 
 ```
 .
-├── attacks/       # attack implementations (compression.py, time_dynamics.py)
-├── methods/       # watermarking method wrappers (audiowmark, AudioSeal)
-├── scripts/       # run_*.py (benchmark runs), summarize_results.py, common.py (shared helpers)
+├── attacks/       # attacks (compression, time_dynamics, noise_filtering); all_attacks() in __init__.py
+├── methods/       # watermarking method wrappers (audiowmark, AudioSeal, WavMark)
+├── scripts/       # run_benchmark.py (all methods), compare_methods.py, summarize_results.py, common.py
 ├── notebooks/     # 01_audiowmark_baseline.ipynb: data preparation and pilot experiments
 ├── data/          # selected_80.csv and data card (audio is not committed)
 ├── results/       # CSV files with results and their description

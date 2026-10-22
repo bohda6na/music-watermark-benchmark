@@ -81,16 +81,16 @@ python -m scripts.run_audioseal --wav-dir <wav-folder> --neural --out results/re
 | Attack | Parameters | Message read | Watermark found | Mean correct bits |
 | ------ | ---------- | ------------ | --------------- | ----------------- |
 | none (baseline) | - | 0.64 | 1.00 | 14.2 |
-| mp3 | 128 / 64 / 32 kbps | 0.62 / 0.60 / 0.59 | 1.00 / 1.00 / 1.00 | 14.1 / 13.9 / 13.9 |
-| aac | 128 / 64 / 32 kbps | 0.61 / 0.65 / 0.50 | 1.00 / 1.00 / 1.00 | 13.9 / 13.9 / 13.7 |
+| mp3 | 128 / 64 / 32 kbps | 0.63 / 0.60 / 0.59 | 1.00 / 1.00 / 1.00 | 14.1 / 13.9 / 13.9 |
+| aac | 128 / 64 / 32 kbps | 0.61 / 0.65 / 0.50 | 1.00 / 1.00 / 1.00 | 14.0 / 13.9 / 13.7 |
 | encodec | 24 / 12 kbps | 0.39 / 0.28 | 0.99 / 0.99 | 13.2 / 12.4 |
 | encodec | 6 / 3 / 1.5 kbps | 0.01 / 0.00 / 0.00 | 0.30 / 0.16 / 0.03 | 10.1 / 7.2 / 6.9 |
 | gain | -6 dB / +6 dB | 0.60 / 0.59 | 1.00 / 1.00 | 13.5 / 13.7 |
 | crop | keep first 50% | 0.84 | 1.00 | 15.0 |
 | speed | 0.9x, 0.95x, 1.05x, 1.1x | 0.00 | 0.00-0.01 | 6.9-9.1 |
 | pitch | -2, -1, +1, +2 semitones | 0.00 | 0.00 | 7.0-7.4 |
-| time_stretch | 0.9x / 0.95x / 1.05x / 1.1x | 0.05 / 0.08 / 0.40 / 0.29 | 0.00 | 9.3 / 9.5 / 12.6 / 11.8 |
-| gaussian_noise | SNR 30 / 20 / 10 dB | 0.42 / 0.33 / 0.17 | 1.00 / 1.00 / 0.96 | 13.3 / 12.6 / 12.3 |
+| time_stretch | 0.9x / 0.95x / 1.05x / 1.1x | 0.05 / 0.08 / 0.40 / 0.29 | 0.00 | 9.3 / 9.5 / 12.6 / 11.9 |
+| gaussian_noise | SNR 30 / 20 / 10 dB | 0.43 / 0.33 / 0.18 | 1.00 / 1.00 / 0.96 | 13.3 / 12.6 / 12.3 |
 | lowpass | cutoff 3 kHz | 0.64 | 1.00 | 14.1 |
 | highpass | cutoff 300 Hz | 0.70 | 1.00 | 14.1 |
 | reverberation | decay 0.4, delay 50 ms, 5 echoes | 0.64 | 1.00 | 14.0 |
@@ -117,7 +117,7 @@ at 10 dB (0.9 in Electronic, Experimental and Pop).
 - **Filtering and reverb do not hurt AudioSeal.** Low-pass 3 kHz, high-pass 300 Hz and reverb
   keep both outputs at the no-attack level (message 0.64-0.70, watermark found 1.00).
 - **Gaussian noise damages the message, not the detector.** Even at 30 dB SNR the message is
-  read in only 42% of tracks (vs 64% with no attack), dropping to 17% at 10 dB. The detector
+  read in only 43% of tracks (vs 64% with no attack), dropping to 18% at 10 dB. The detector
   still finds the watermark in 96-100% of tracks. At 30 dB the noise is only about 5 dB
   quieter than the watermark itself (embedding SNR is about 25 dB).
 - **The same split as for compression**: "is this track watermarked?" is answered very
