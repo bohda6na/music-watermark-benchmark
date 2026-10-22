@@ -1,4 +1,6 @@
-"""Run AudioSeal on the 80 selected tracks: no attack, compression, time and dynamics -> CSV.
+"""Run AudioSeal on the 80 selected tracks: no attack + all attack groups -> CSV.
+
+Attack groups: compression (mp3, aac, optional encodec), time/dynamics, noise/filtering.
 
 For each track: embed the shared 16-bit message, compute SNR(original, watermarked),
 then detect after every attack. One CSV row per (track, attack, params):
@@ -22,6 +24,7 @@ import time
 from pathlib import Path
 
 from attacks.compression import compression_attacks
+from attacks.noise_filtering import noise_filtering_attacks
 from attacks.time_dynamics import time_dynamics_attacks
 from methods.audioseal_method import AudioSealWatermarker
 from scripts.common import (
@@ -63,6 +66,7 @@ def main() -> None:
         [("none", "-", lambda x: x)]
         + compression_attacks(include_neural=args.neural)
         + time_dynamics_attacks()
+        + noise_filtering_attacks()
     )
     tracks = read_selection()[: args.limit]
     message = bits_from_str(MESSAGE)
