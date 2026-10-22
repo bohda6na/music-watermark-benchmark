@@ -35,12 +35,12 @@ Message read = at least 14 of 16 bits correct; [95% interval]. Watermark found =
 | gain | -6dB | 0.60 [0.49-0.70] | 1.00 [0.95-1.00] | 1.00 |
 | gain | +6dB | 0.59 [0.48-0.69] | 1.00 [0.95-1.00] | 1.00 |
 | crop | keep50% | 0.84 [0.74-0.90] | 1.00 [0.95-1.00] | 1.00 |
-| gaussian_noise | snr_db=30 | 0.43 [0.32-0.53] | - | 1.00 |
-| gaussian_noise | snr_db=20 | 0.33 [0.23-0.43] | - | 1.00 |
-| gaussian_noise | snr_db=10 | 0.18 [0.11-0.27] | - | 0.96 |
-| lowpass | cutoff=3000 | 0.64 [0.53-0.73] | - | 1.00 |
-| highpass | cutoff=300 | 0.70 [0.59-0.79] | - | 1.00 |
-| reverberation | decay=0.4,delay_ms=50,repeats=5 | 0.64 [0.53-0.73] | - | 1.00 |
+| gaussian_noise | snr_db=30 | 0.43 [0.32-0.53] | 1.00 [0.95-1.00] | 1.00 |
+| gaussian_noise | snr_db=20 | 0.33 [0.23-0.43] | 0.98 [0.91-0.99] | 1.00 |
+| gaussian_noise | snr_db=10 | 0.18 [0.11-0.27] | 0.80 [0.70-0.87] | 0.96 |
+| lowpass | cutoff=3000 | 0.64 [0.53-0.73] | 1.00 [0.95-1.00] | 1.00 |
+| highpass | cutoff=300 | 0.70 [0.59-0.79] | 1.00 [0.95-1.00] | 1.00 |
+| reverberation | decay=0.4,delay_ms=50,repeats=5 | 0.64 [0.53-0.73] | 1.00 [0.95-1.00] | 1.00 |
 
 ## Mean correct bits (of 16)
 
@@ -76,12 +76,12 @@ No message returned counts as 8 (chance).
 | gain | -6dB | 13.5 | 16.0 |
 | gain | +6dB | 13.7 | 16.0 |
 | crop | keep50% | 15.0 | 16.0 |
-| gaussian_noise | snr_db=30 | 13.3 | - |
-| gaussian_noise | snr_db=20 | 12.6 | - |
-| gaussian_noise | snr_db=10 | 12.3 | - |
-| lowpass | cutoff=3000 | 14.1 | - |
-| highpass | cutoff=300 | 14.1 | - |
-| reverberation | decay=0.4,delay_ms=50,repeats=5 | 14.0 | - |
+| gaussian_noise | snr_db=30 | 13.3 | 16.0 |
+| gaussian_noise | snr_db=20 | 12.6 | 15.8 |
+| gaussian_noise | snr_db=10 | 12.3 | 14.4 |
+| lowpass | cutoff=3000 | 14.1 | 16.0 |
+| highpass | cutoff=300 | 14.1 | 16.0 |
+| reverberation | decay=0.4,delay_ms=50,repeats=5 | 14.0 | 16.0 |
 
 ## False positives (unwatermarked tracks)
 
@@ -99,17 +99,17 @@ No message returned counts as 8 (chance).
 
 ## Message read by genre
 
-'none' = no attack; 'attacks' = mean over the 21 attack variants that every method was tested with, so the methods are compared on the same set.
+'none' = no attack; 'attacks' = mean over the 27 attack variants that every method was tested with, so the methods are compared on the same set.
 
 | Genre | audioseal: none | audioseal: attacks | audiowmark: none | audiowmark: attacks |
 |---|---|---|---|---|
-| Electronic | 0.90 | 0.35 | 1.00 | 0.43 |
-| Experimental | 0.30 | 0.17 | 1.00 | 0.43 |
-| Folk | 0.80 | 0.43 | 1.00 | 0.43 |
-| Hip-Hop | 0.60 | 0.30 | 1.00 | 0.43 |
-| Instrumental | 0.70 | 0.36 | 1.00 | 0.43 |
-| International | 0.60 | 0.31 | 1.00 | 0.43 |
-| Pop | 0.70 | 0.28 | 1.00 | 0.43 |
-| Rock | 0.50 | 0.24 | 1.00 | 0.43 |
+| Electronic | 0.90 | 0.40 | 1.00 | 0.54 |
+| Experimental | 0.30 | 0.20 | 1.00 | 0.55 |
+| Folk | 0.80 | 0.49 | 1.00 | 0.54 |
+| Hip-Hop | 0.60 | 0.34 | 1.00 | 0.55 |
+| Instrumental | 0.70 | 0.40 | 1.00 | 0.55 |
+| International | 0.60 | 0.33 | 1.00 | 0.55 |
+| Pop | 0.70 | 0.33 | 1.00 | 0.55 |
+| Rock | 0.50 | 0.28 | 1.00 | 0.55 |
 
 Tracks per genre: 10. With n tracks one track moves a value by 1/n (0.1 for 10 tracks), so genre differences are preliminary.
