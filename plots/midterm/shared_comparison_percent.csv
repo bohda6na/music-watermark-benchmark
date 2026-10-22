@@ -1,0 +1,8 @@
+label,audioseal,audiowmark,wavmark
+No attack,63.75,100.0,95.0
+Noise · 30 dB,42.5,100.0,92.5
+Noise · 20 dB,32.5,97.5,33.75
+Noise · 10 dB,17.5,80.0,0.0
+Low-pass · 3 kHz,63.75,100.0,82.5
+High-pass · 300 Hz,70.0,100.0,96.25
+Reverberation,63.75,100.0,83.75
