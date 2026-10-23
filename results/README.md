@@ -4,9 +4,12 @@ Setup: audiowmark, 16-bit message (`a5c3`), default strength 10, 80 tracks
 (10 per genre), mono 44.1 kHz WAV. A message counts as **detected** if
 bit accuracy >= 14/16 (0.875).
 
-Files (columns: `method, attack, params, genre, track_id, detected, snr, bit_acc`):
-- `results_audiowmark.csv`: main run, 80 tracks x 16 variants = 1280 rows;
-- `results_audiowmark_detect_speed.csv`: extra run with `--detect-speed`, 80 x 2 = 160 rows.
+Files (columns: `method, attack, params, genre, track_id, detected, snr, bit_acc, detect_prob`;
+`detect_prob` is empty for audiowmark):
+- `results_audiowmark.csv`: main run, 80 tracks x 29 rows = 2320 rows (no attack, 27 attack
+  variants and one unwatermarked control);
+- `results_audiowmark_detect_speed.csv`: extra run with `--detect-speed`, 80 x 3 = 240 rows
+  (speed 0.9x and 1.1x, plus the unwatermarked control with the option switched on).
 
 Reproduce the numbers below (needs only the CSV files, no audio):
 ```
