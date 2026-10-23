@@ -120,9 +120,30 @@ Message read with no attack, by genre (10 tracks each):
 - SNR after embedding: mean 25.5 dB (range 19.7 to 39.3), lower than audiowmark (31.0 dB). Genre means lie between 24.3 dB (Hip-Hop) and 27.3 dB (International).
 - The 14/16 rule is stricter for AudioSeal than its own detector, so a comparison with audiowmark on the `detected` column alone understates AudioSeal for "is this track watermarked?".
 
-Not tested yet: audiowmark under the noise and filtering attacks; this is needed for the full method x attack table.
 
 Limitations: 80 tracks, so genre-level conclusions are preliminary (one track is 10 percentage points within a genre); one fixed message and embedding strength; no listening tests (SNR does not measure perceived quality); the source files are already mp3 decoded to WAV. WavMark results will be added after the CSV file is merged. Details and raw files: [`results/`](results/README.md).
+
+### Comparison on the shared conditions
+
+Only the conditions that all three methods were run on are compared: no attack, Gaussian noise (30 / 20 / 10 dB), low-pass 3 kHz, high-pass 300 Hz, reverb. Message read = at least 14 of 16 bits correct, 80 tracks, the share of tracks. Plots: [`plots/midterm/`](plots/midterm/), table with 95% intervals: [`results/summary/comparison.md`](results/summary/comparison.md).
+
+| Condition | audiowmark | WavMark | AudioSeal: message read | AudioSeal: watermark found |
+|---|---|---|---|---|
+| no attack | 1.00 | 0.95 | 0.64 | 1.00 |
+| noise 30 dB | 1.00 | 0.93 | 0.43 | 1.00 |
+| noise 20 dB | 0.98 | 0.34 | 0.33 | 1.00 |
+| noise 10 dB | 0.80 | 0.00 | 0.18 | 0.96 |
+| low-pass 3 kHz | 1.00 | 0.82 | 0.64 | 1.00 |
+| high-pass 300 Hz | 1.00 | 0.96 | 0.70 | 1.00 |
+| reverb | 1.00 | 0.84 | 0.64 | 1.00 |
+| SNR after embedding, mean (dB) | 31.0 | 37.2 | 25.5 | 25.5 |
+
+- The methods are **not compared at equal audio quality**: each runs at its default strength, and the embedding SNR differs (WavMark 37.2 dB, audiowmark 31.0 dB, AudioSeal 25.5 dB). A higher SNR means a weaker change to the signal, so "method A is more robust than B" cannot be concluded from this table alone.
+- AudioSeal's own detector answers "is this track watermarked?" in 96-100% of tracks, but reads the full 16-bit message much less often. The "message read" column uses the stricter team criterion, so it is not the same question as the last column.
+- WavMark does not read the message even without an attack in 4 of 80 tracks, all Experimental (tracks 897, 995, 997, 998).
+- WavMark is sensitive to noise (0.34 at 20 dB, 0.00 at 10 dB) and to a 3 kHz low-pass (0.82). audiowmark is the most robust of the three on this set.
+- Time, dynamics and compression attacks are compared for audiowmark and AudioSeal only; WavMark has not been run on them.
+- With 10 tracks per genre, genre differences are preliminary (one track is 10 percentage points).
 
 ## Quick start
 
