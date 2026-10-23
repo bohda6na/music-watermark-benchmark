@@ -21,12 +21,26 @@ python scripts/summarize_results.py results/results_audiowmark_detect_speed.csv
 
 | Attack | Parameters | Detection rate |
 | ------ | ---------- | -------------- |
-| none (baseline) | - | 1.0 |
-| gain | -6 dB, +6 dB | 1.0 |
-| crop | keep first 50% | 1.0 |
-| speed | 0.9x, 0.95x, 1.05x, 1.1x | 0.0 |
-| time_stretch | 0.9x, 0.95x, 1.05x, 1.1x | 0.0 |
-| pitch | -2, -1, +1, +2 semitones | 0.0 |
+| none (baseline) | - | 1.00 |
+| mp3 | 128 / 64 / 32 kbps | 1.00 / 1.00 / 1.00 |
+| aac | 128 / 64 / 32 kbps | 1.00 / 1.00 / 1.00 |
+| gain | -6 dB, +6 dB | 1.00 |
+| crop | keep first 50% | 1.00 |
+| gaussian_noise | SNR 30 / 20 / 10 dB | 1.00 / 0.98 / 0.80 |
+| lowpass | cutoff 3 kHz | 1.00 |
+| highpass | cutoff 300 Hz | 1.00 |
+| reverberation | decay 0.4, delay 50 ms, 5 echoes | 1.00 |
+| speed | 0.9x, 0.95x, 1.05x, 1.1x | 0.00 |
+| time_stretch | 0.9x, 0.95x, 1.05x, 1.1x | 0.00 |
+| pitch | -2, -1, +1, +2 semitones | 0.00 |
+| unwatermarked (control) | - | 0.00 |
+
+Gaussian noise at 10 dB: 16 of 80 tracks lose the message, all with no message found. By genre the
+tracks that read the message at 10 dB are: Electronic 6, Folk 6, Instrumental 8, Pop 8,
+Experimental 9, Hip-Hop 9, International 9, Rock 9 (out of 10). With 10 tracks per genre this
+does not show that genre matters. The two misses at 20 dB (tracks 615 and 1482) are the tracks
+with the highest embedding SNR (51.0 and 46.9 dB), which also fail at 10 dB; we did not test whether
+the embedding strength is the cause.
 
 ## Extra experiment: `--detect-speed` (speed attack only)
 
