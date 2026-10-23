@@ -145,6 +145,38 @@ Only the conditions that all three methods were run on are compared: no attack, 
 - Time, dynamics and compression attacks are compared for audiowmark and AudioSeal only; WavMark has not been run on them.
 - With 10 tracks per genre, genre differences are preliminary (one track is 10 percentage points).
 
+## Status, difficulties and next steps after midterm
+
+### Where we are (midterm)
+
+- Benchmark pipeline: one attack list (`attacks.all_attacks()`), one run script for all methods (`scripts/run_benchmark.py`), one comparison script (`scripts/compare_methods.py`), shared CSV format.
+- audiowmark and AudioSeal are run on all 80 tracks under every attack group. [WavMark] WavMark is still being run; so far it has no attack and noise/filtering only.
+- First findings: no method survives speed, time stretch or pitch shift, even for mild changes; filters, reverb, gain and crop are survived by audiowmark and by AudioSeal's detector; Gaussian noise separates the methods.
+
+### Plan until the final report
+
+Taken from the project proposal ("Until the final defence") and adjusted to what we learned.
+
+| Step | What is left |
+|---|---|
+| Complete the attack set | [WavMark] Run WavMark on time/dynamics, compression and the unwatermarked control, so all three methods have the same attacks. Decide whether EnCodec is run for all methods or only AudioSeal. |
+| Statistical analysis | Intervals are already in `results/summary/comparison.md`. Still to do: a per-genre analysis that goes beyond 10 tracks per genre, and an analysis by attack type. |
+| Robustness vs quality | The methods currently run at their default strength, so their embedding SNR differs (25.5 / 31.0 / 37.2 dB). To compare robustness at equal quality we need runs at several strengths per method. |
+| Demo | Interactive demo: Upload, Embed, Attack, Detect, Results. Not built yet. |
+| Own approach (optional in the proposal) | Only if the results give a clear direction, for example for time and pitch changes, which break every method we tested. Not started. |
+| Documentation | Reproducible instructions, automated tests for attacks and metrics, final report. |
+
+### Difficulties and what did not work
+
+- **Speed, time stretch and pitch shift break every method we tested** (detection 0.00, also at 5% or one semitone). audiowmark's `--detect-speed` option fixes speed changes (1.00 in all 80 tracks at 0.9x and 1.1x), but it did not help for time stretch or pitch on the one track we tried. We have not found a setup where any method survives these three attacks.
+- **AudioSeal reads the 16-bit message in only 64% of tracks even with no attack**, while its own detector finds the watermark in 100%. It was trained on speech, which is the gap the project is about. We do not know why crop to 50% reads the message more often (0.84) than no attack, or why time stretch reads the message in up to 40% of tracks while the detector finds none. These were not investigated.
+- **Methods are not compared at equal audio quality.** Each runs at its default embedding strength, so "more robust" can partly mean "stronger change to the signal". Our SNR is not a measure of what a listener hears.
+- **[WavMark] WavMark is slow and not finished.** The free Colab GPU quota ran out, so the missing attacks have to be run on CPU or split between team members. In the runs we have, WavMark does not read the message even without an attack in 4 of 80 tracks (all Experimental).
+- **Result formats drifted between team members.** the audiowmark labels and the WavMark "no message" value differed from the shared format (for example `0.9` instead of `0.9x`, and `bit_acc = 0.0` instead of an empty value), and each of us first had a separate run script. We fixed this with `scripts/fix_audiowmark_labels.py` and the shared `run_benchmark.py`, but the fixes came late.
+- **Setup is fragile.** audiowmark must be built from source and is tested only on Linux (Colab), and the build is repeated in every new Colab session. AudioSeal on CPU takes about 36 s per track.
+- **The speed attack changed between runs.** The notebook runs used `librosa.resample`, the scripts use `resample_poly`. The speed rows were not rerun; the effect on the results is not measured.
+- **Limited data and no listening tests.** 80 tracks (10 per genre), one message, one strength, source files already mp3, no listening tests. Only Gaussian noise gives detection rates between 0 and 1 for audiowmark, so a genre comparison is possible only there.
+
 ## Quick start
 
 audiowmark must be installed separately (https://github.com/swesterfeld/audiowmark, GPL, used as an external program). The pipeline was tested on Linux (Google Colab).
