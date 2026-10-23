@@ -42,14 +42,13 @@ does not show that genre matters. The two misses at 20 dB (tracks 615 and 1482) 
 with the highest embedding SNR (51.0 and 46.9 dB), which also fail at 10 dB; we did not test whether
 the embedding strength is the cause.
 
-## Extra experiment: `--detect-speed` (speed attack only)
-
 | Method | Speed | Detection rate | Mean bit accuracy |
 | ------ | ----- | -------------- | ----------------- |
 | audiowmark | 0.9x | 0.0 | - |
 | audiowmark | 1.1x | 0.0 | - |
 | audiowmark+detect-speed | 0.9x | 1.0 | 1.0 |
 | audiowmark+detect-speed | 1.1x | 1.0 | 1.0 |
+| audiowmark+detect-speed, unwatermarked (control) | - | 0.0 | - |
 
 The main run keeps this option **off**, because AudioSeal and WavMark have no such mode and
 the comparison must use equal conditions.
@@ -60,14 +59,15 @@ the comparison must use equal conditions.
 - Genre means range from 29.9 dB (Hip-Hop) to 33.8 dB (Electronic).
 
 ## Limitations
-- 80 tracks, 10 per genre: genre-level conclusions are preliminary. For every attack tested so
-  far the detection rate is 0 or 1 in all genres, so genres cannot be compared yet.
+- 80 tracks, 10 per genre: genre-level conclusions are preliminary. Only Gaussian noise gives
+  rates between 0 and 1; for every other attack the rate is 0 or 1 in all genres.
 - One method, one message (`a5c3`), one embedding strength (default).
-- `--detect-speed` was tested on all 80 tracks only for speed 0.9x and 1.1x. For
-  `time_stretch` and `pitch` it was tried on one track and did not help.
+- `--detect-speed` was tested on all 80 tracks only for speed 0.9x and 1.1x (not 0.95x, 1.05x).
+  For `time_stretch` and `pitch` it was tried on one track and did not help.
+- The speed rows were made with `librosa.resample`; `attacks/time_dynamics.py` now uses
+  `resample_poly`. Not rerun.
 - SNR measures how much the signal changed, not how audible the change is. We ran no
   listening tests.
-- The false-positive check (reading a message from an unmarked file) was done on one track only.
 - The source files were already mp3, converted to WAV.
 ---
 
