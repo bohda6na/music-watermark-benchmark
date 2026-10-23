@@ -182,8 +182,8 @@ Automated tests for attacks and metrics are not written yet.
 | Tool | Used for | How the result was checked |
 |---|---|---|
 | Claude | Review of the repository state, finding leftovers from the project template, rewriting this README and fixing `requirements.txt`, `pyproject.toml`, `scripts/summarize_results.py` | Read the diff; ran `scripts/summarize_results.py` on `results/results_audiowmark.csv` and compared with the table above |
-
-<!-- TODO(Bohdana): add every other tool you used (code, notebook, text) and how you checked it. Teammates add their own rows. -->
+| Claude | Drafting the audiowmark notebook (`notebooks/01_audiowmark_baseline.ipynb`), the time and dynamics attack code, the compression runs for audiowmark and the resumable run scripts | Ran everything in Google Colab on all 80 tracks; checked each CSV (rows per track, duplicates, identical SNR per track, control rows); identity attacks (speed 1.0x, stretch 1.0x, pitch 0) must read the message; compared the numbers in the text with `scripts/summarize_results.py` output |
+| Claude | Reading the shared pipeline (`scripts/run_benchmark.py`, `scripts/compare_methods.py`), checking teammates' CSV files for completeness and format, drafting README and `results/README.md` text | Numbers recomputed from the CSV files before pasting; teammates' files were checked against the shared column format and the expected number of rows per track |
 
 ## Contribution statement
 
