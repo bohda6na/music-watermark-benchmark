@@ -53,20 +53,29 @@ Metrics: robustness is the share of tracks where the watermark is still detected
 
 ### audiowmark
 
-Preliminary results for audiowmark on 80 tracks (10 per genre), default embedding strength:
+audiowmark on 80 tracks (10 per genre), default embedding strength, 29 rows per track
+(`results/results_audiowmark.csv`). Share of tracks where the 16-bit message is read (at least 14/16 bits):
 
 | Attack | Parameters | Detection rate |
 |---|---|---|
-| none | - | 1.0 |
-| gain | -6 dB, +6 dB | 1.0 |
-| crop | keep first 50% | 1.0 |
-| speed | 0.9x, 0.95x, 1.05x, 1.1x | 0.0 |
-| time stretch | 0.9x, 0.95x, 1.05x, 1.1x | 0.0 |
-| pitch shift | -2, -1, +1, +2 semitones | 0.0 |
+| none | - | 1.00 |
+| MP3, AAC | 128 / 64 / 32 kbps | 1.00 |
+| gain | -6 dB, +6 dB | 1.00 |
+| crop | keep first 50% | 1.00 |
+| Gaussian noise | SNR 30 / 20 / 10 dB | 1.00 / 0.98 / 0.80 |
+| low-pass | 3 kHz | 1.00 |
+| high-pass | 300 Hz | 1.00 |
+| reverb | 5 echoes, 50 ms, decay 0.4 | 1.00 |
+| speed | 0.9x, 0.95x, 1.05x, 1.1x | 0.00 |
+| time stretch | 0.9x, 0.95x, 1.05x, 1.1x | 0.00 |
+| pitch shift | -2, -1, +1, +2 semitones | 0.00 |
+| unwatermarked track (control) | - | 0.00 |
 
-- Speed, time stretch and pitch shift break the watermark even for mild changes (5% tempo, 1 semitone).
-- With the `--detect-speed` option, speed changes of 0.9x and 1.1x are fully compensated (detection 1.0). It is tested separately and is not part of the main comparison, because AudioSeal and WavMark have no equivalent.
-- SNR after embedding: mean 31.0 dB (range 25.5 to 51.0). Genre means lie between 29.9 dB (Hip-Hop) and 33.8 dB (Electronic).
+- Speed, time stretch and pitch shift break the watermark even for mild changes (5% tempo, 1 semitone). Compression, filtering, reverb, gain and crop do not affect it.
+- Gaussian noise is the only attack where the result is not 0 or 1: 10 dB SNR loses the message in 16 of 80 tracks. In all 16 the decoder found no message at all. The two misses at 20 dB are the tracks with the highest embedding SNR (51.0 and 46.9 dB); this is an observation on 80 tracks, not a tested cause.
+- With the `--detect-speed` option, speed changes of 0.9x and 1.1x are fully compensated (detection 1.00 in all 80 tracks, no bit errors) and on unwatermarked tracks it gives no false positives (0 of 80). It is tested separately and is not part of the main comparison, because AudioSeal and WavMark have no equivalent.
+- No false positives: on the 80 unwatermarked tracks the decoder found no message.
+- SNR after embedding: mean 31.0 dB (range 25.5 to 51.0). Genre means lie between 29.9 dB (Hip-Hop) and 33.9 dB (Electronic).
 
 ### AudioSeal
 
