@@ -9,7 +9,8 @@ from scripts.common import SR, resample
 class WavMarkWatermarker:
     name = "wavmark"
 
-    def __init__(self, device=None):
+    def __init__(self, device=None, decode_batch_size=10):
+        self.decode_batch_size = decode_batch_size
         self.device = device or (
             "cuda" if torch.cuda.is_available() else "cpu"
         )
@@ -28,17 +29,23 @@ class WavMarkWatermarker:
             show_progress=False
         )
 
-        y = resample(watermarked, 16000, sr)
-        return np.pad(
-            y, (0, max(0, len(x) - len(y)))
-        )[:len(x)].astype(np.float32)
+        # WavMark works at 16 kHz. Add only the watermark (watermarked - x16),
+        # upsampled to sr, to the original, so the content above 8 kHz is kept.
+        residual = resample(watermarked - x16, 16000, sr)
+        residual = np.pad(
+            residual, (0, max(0, len(x) - len(residual)))
+        )[:len(x)]
+        return (x + residual).astype(np.float32)
 
     def detect(self, y, sr=SR):
         y16 = resample(y, sr, 16000)
 
+        # decode_batch_size only sets how many windows go to the model at once;
+        # every window is decoded on its own, so the result does not depend on it.
         decoded, _ = wavmark.decode_watermark(
             self.model,
             y16,
+            decode_batch_size=self.decode_batch_size,
             show_progress=False
         )
 

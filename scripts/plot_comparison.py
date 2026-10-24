@@ -1,13 +1,18 @@
 """Midterm visualization of AudioSeal, audiowmark and WavMark results.
 
 Run from the repository root:
-    python scripts/plot_midterm.py
+    python scripts/plot_comparison.py
+    python -m scripts.plot_comparison        # same
 
-Uses only results/results_{audioseal,audiowmark,wavmark}.csv.
+Uses only the results files listed in FILES (one per method).
 Detection plots are based exclusively on `detected`; they do not use `bit_acc`.
+
+Shared plots (01, 02, 04, 05) use every (attack, params) that all three methods were
+tested with, in the order of the shared attack list (attacks.all_attacks). Attacks that
+only some methods have (e.g. EnCodec, AudioSeal only) appear in the per-method plots (03).
 """
+import sys
 from pathlib import Path
-import re
 
 import matplotlib
 matplotlib.use("Agg")
@@ -16,23 +21,25 @@ import numpy as np
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))  # so `attacks` imports when run as a plain script
+
+from attacks import all_attacks  # noqa: E402
+
 RESULTS = ROOT / "results"
 OUT = ROOT / "plots" / "midterm"
 OUT.mkdir(parents=True, exist_ok=True)
 
 METHODS = ("audioseal", "audiowmark", "wavmark")
+# Results file per method.
+FILES = {
+    "audioseal": "results_audioseal.csv",
+    "audiowmark": "results_audiowmark.csv",
+    "wavmark": "results_wavmark.csv",
+}
 COLORS = {"audioseal": "#3869C9", "audiowmark": "#E28A38", "wavmark": "#299B88"}
 
-# Seven conditions recorded for WavMark and the other two methods.
-EXPECTED_COMMON = [
-    ("none", "-"),
-    ("gaussian_noise", "snr_db=30"),
-    ("gaussian_noise", "snr_db=20"),
-    ("gaussian_noise", "snr_db=10"),
-    ("lowpass", "cutoff=3000"),
-    ("highpass", "cutoff=300"),
-    ("reverberation", "decay=0.4,delay_ms=50,repeats=5"),
-]
+# Canonical order of all conditions (the control 'unwatermarked' is plotted separately).
+ATTACK_ORDER = [("none", "-")] + [(a, p) for a, p, _ in all_attacks(include_neural=True)]
 
 LABELS = {
     ("none", "-"): "No attack",
@@ -42,11 +49,29 @@ LABELS = {
     ("lowpass", "cutoff=3000"): "Low-pass · 3 kHz",
     ("highpass", "cutoff=300"): "High-pass · 300 Hz",
     ("reverberation", "decay=0.4,delay_ms=50,repeats=5"): "Reverberation",
+    ("crop", "keep50%"): "Crop · keep 50%",
+}
+PREFIX = {
+    "mp3": "MP3",
+    "aac": "AAC",
+    "encodec": "EnCodec",
+    "speed": "Speed",
+    "time_stretch": "Time stretch",
+    "pitch": "Pitch",
+    "gain": "Gain",
 }
 
 
 def label(attack: str, params: str) -> str:
-    return LABELS.get((attack, params), f"{attack.replace('_', ' ')} · {params}")
+    if (attack, params) in LABELS:
+        return LABELS[(attack, params)]
+    p = params.replace("kbps", " kbps").replace("st", " st").replace("dB", " dB")
+    return f"{PREFIX.get(attack, attack.replace('_', ' '))} · {p}"
+
+
+def order_index(attack: str, params: str) -> int:
+    key = (attack, params)
+    return ATTACK_ORDER.index(key) if key in ATTACK_ORDER else len(ATTACK_ORDER)
 
 
 def save(name: str) -> None:
@@ -59,7 +84,7 @@ def save(name: str) -> None:
 def load() -> pd.DataFrame:
     chunks = []
     for method in METHODS:
-        path = RESULTS / f"results_{method}.csv"
+        path = RESULTS / FILES[method]
         if not path.is_file():
             raise FileNotFoundError(f"Missing {path}")
         d = pd.read_csv(path, dtype={"track_id": str, "params": str}, keep_default_na=False)
@@ -89,10 +114,15 @@ def get_common(d: pd.DataFrame) -> pd.DataFrame:
     available = set.intersection(*(
         set(zip(s.attack, s.params)) for _, s in d.groupby("method")
     ))
-    selected = [key for key in EXPECTED_COMMON if key in available]
-    if len(selected) != len(EXPECTED_COMMON):
-        print("Warning: some expected shared conditions are absent:",
-              [x for x in EXPECTED_COMMON if x not in available])
+    available.discard(("unwatermarked", "-"))
+    selected = sorted(available, key=lambda k: order_index(*k))
+    only_some = sorted(
+        {k for k in zip(d.attack, d.params) if k not in available} - {("unwatermarked", "-")},
+        key=lambda k: order_index(*k),
+    )
+    print(f"Shared conditions: {len(selected)}")
+    if only_some:
+        print("Not shared by all methods (per-method plots only):", only_some)
     if not selected:
         raise ValueError("No common attacks found")
     masks = pd.MultiIndex.from_frame(d[["attack", "params"]]).isin(selected)
@@ -109,13 +139,15 @@ def get_common(d: pd.DataFrame) -> pd.DataFrame:
 
 def comparison_table(common: pd.DataFrame) -> pd.DataFrame:
     rates = common.groupby(["label", "method"])["detected"].mean().mul(100).unstack()
-    order = [label(*key) for key in EXPECTED_COMMON if label(*key) in rates.index]
+    keys = sorted(set(zip(common.attack, common.params)), key=lambda k: order_index(*k))
+    order = [label(*key) for key in keys if label(*key) in rates.index]
     return rates.reindex(order)[list(METHODS)]
 
 
 def plot_grouped(table: pd.DataFrame) -> None:
-    fig, ax = plt.subplots(figsize=(12.2, 5.9))
-    x = np.arange(len(table))
+    n = len(table)
+    fig, ax = plt.subplots(figsize=(max(12.2, 0.62 * n + 2), 5.9))
+    x = np.arange(n)
     w = 0.26
     for i, m in enumerate(METHODS):
         bars = ax.bar(x + (i - 1) * w, table[m], width=w, label=m,
@@ -123,11 +155,12 @@ def plot_grouped(table: pd.DataFrame) -> None:
         for bar in bars:
             height = bar.get_height()
             if pd.notna(height):
-                ax.annotate(f"{height:.1f}", (bar.get_x() + bar.get_width() / 2, height),
-                            xytext=(0, 3), textcoords="offset points", ha="center", fontsize=7.5)
-    ax.set(title="Robustness comparison · 7 shared conditions",
+                ax.annotate(f"{height:.0f}", (bar.get_x() + bar.get_width() / 2, height),
+                            xytext=(0, 2), textcoords="offset points", ha="center",
+                            fontsize=6.5 if n > 10 else 7.5)
+    ax.set(title=f"Robustness comparison · {n} shared conditions",
            ylabel="Message decoded (≥14/16 bits), %", ylim=(0, 112))
-    ax.set_xticks(x, table.index, rotation=25, ha="right")
+    ax.set_xticks(x, table.index, rotation=40 if n > 10 else 25, ha="right")
     ax.legend(frameon=False, ncol=3)
     ax.grid(axis="y", alpha=.17)
     ax.set_axisbelow(True)
@@ -136,7 +169,7 @@ def plot_grouped(table: pd.DataFrame) -> None:
 
 
 def plot_heatmap(table: pd.DataFrame) -> None:
-    fig, ax = plt.subplots(figsize=(8, 5.4))
+    fig, ax = plt.subplots(figsize=(8, max(5.4, 0.36 * len(table) + 1.5)))
     arr = table.to_numpy()
     im = ax.imshow(arr, vmin=0, vmax=100, cmap="YlGnBu", aspect="auto")
     ax.set_xticks(np.arange(len(METHODS)), METHODS)
@@ -154,12 +187,13 @@ def plot_heatmap(table: pd.DataFrame) -> None:
 
 
 def plot_individual(d: pd.DataFrame, method: str) -> None:
-    part = d[(d.method == method) & (d.attack != "unwatermarked")].copy()
+    # EnCodec was run only for AudioSeal, so it is left out to keep the plots comparable.
+    part = d[(d.method == method) & ~d.attack.isin(["unwatermarked", "encodec"])].copy()
     summary = part.groupby(["attack", "params"], sort=True)["detected"].agg(["mean", "size"]).reset_index()
     summary["display"] = [label(a, p) for a, p in zip(summary.attack, summary.params)]
     summary["rate"] = summary["mean"] * 100
-    summary["priority"] = (summary.attack != "none").astype(int)
-    summary = summary.sort_values(["priority", "attack", "params"])
+    summary["order"] = [order_index(a, p) for a, p in zip(summary.attack, summary.params)]
+    summary = summary.sort_values(["order", "attack", "params"])
     fig, ax = plt.subplots(figsize=(11.5, max(5, 0.34 * len(summary) + 1.6)))
     y = np.arange(len(summary))
     bars = ax.barh(y, summary.rate, color=COLORS[method], height=0.73)
@@ -177,8 +211,9 @@ def plot_individual(d: pd.DataFrame, method: str) -> None:
 
 
 def plot_genres(common: pd.DataFrame) -> None:
-    # Six shared attacks only, excluding baseline; unwatermarked is never included.
+    # Shared attacks only, excluding baseline; unwatermarked is never included.
     attacked = common[~common.attack.isin(["none", "unwatermarked"])]
+    n_attacks = attacked[["attack", "params"]].drop_duplicates().shape[0]
     g = attacked.groupby(["genre", "method"])["detected"].mean().mul(100).unstack()
     g = g.reindex(columns=list(METHODS)).sort_index()
     if g.empty:
@@ -189,7 +224,7 @@ def plot_genres(common: pd.DataFrame) -> None:
     for i, method in enumerate(METHODS):
         ax.bar(x + (i-1)*w, g[method], width=w, color=COLORS[method], label=method)
     ax.set_xticks(x, g.index, rotation=25, ha="right")
-    ax.set(title="Detection rate by genre · 6 shared attacks (baseline excluded)",
+    ax.set(title=f"Detection rate by genre · {n_attacks} shared attacks (baseline excluded)",
            ylabel="Detection rate (%)", ylim=(0, 105))
     ax.legend(frameon=False, ncol=3)
     ax.grid(axis="y", alpha=.17)
@@ -234,8 +269,9 @@ def plot_controls(d: pd.DataFrame) -> None:
     ax.grid(axis="y", alpha=.15)
     fig.tight_layout()
     save("06_unwatermarked_controls")
-    if "wavmark" not in names:
-        print("Note: WavMark control not yet tested; no WavMark bar shown.")
+    missing = [m for m in METHODS if m not in names]
+    if missing:
+        print(f"Note: no unwatermarked control rows for {missing}; no bar shown for them.")
 
 
 def main() -> None:
