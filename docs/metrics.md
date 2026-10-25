@@ -19,7 +19,7 @@ returns a message and its bit accuracy is at least 14/16 (0.875), that is, at mo
 |---|---|---|
 | audiowmark | 16 bits, or nothing if no pattern is found | bit accuracy >= 14/16; no output counts as not detected |
 | AudioSeal | probability that the audio is watermarked + 16 bits | bit accuracy >= 14/16 (the probability is saved as `detect_prob`, but it is not used for the decision) |
-| WavMark | 16 bits, or nothing if no pattern is found | bit accuracy >= 14/16; no output counts as not detected (to be confirmed with the WavMark owner) |
+| WavMark | 16 bits, or nothing if no pattern is found | bit accuracy >= 14/16; no output counts as not detected |
 
 ## Why 14/16
 
