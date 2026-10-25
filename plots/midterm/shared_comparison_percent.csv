@@ -6,6 +6,11 @@ MP3 · 32 kbps,58.75,100.0,43.75
 AAC · 128 kbps,61.25,100.0,95.0
 AAC · 64 kbps,65.0,100.0,90.0
 AAC · 32 kbps,50.0,100.0,51.25
+EnCodec · 24 kbps,38.75,0.0,0.0
+EnCodec · 12 kbps,27.5,0.0,0.0
+EnCodec · 6 kbps,1.25,0.0,0.0
+EnCodec · 3 kbps,0.0,0.0,0.0
+EnCodec · 1.5 kbps,0.0,0.0,0.0
 Speed · 0.9x,0.0,0.0,85.0
 Speed · 0.95x,0.0,0.0,0.0
 Speed · 1.05x,0.0,0.0,0.0

@@ -15,11 +15,11 @@ Message read = at least 14 of 16 bits correct; [95% interval]. Watermark found =
 | aac | 128kbps | 0.61 [0.50-0.71] | 1.00 [0.95-1.00] | 0.95 [0.88-0.98] | 1.00 |
 | aac | 64kbps | 0.65 [0.54-0.75] | 1.00 [0.95-1.00] | 0.90 [0.81-0.95] | 1.00 |
 | aac | 32kbps | 0.50 [0.39-0.61] | 1.00 [0.95-1.00] | 0.51 [0.40-0.62] | 1.00 |
-| encodec | 24kbps | 0.39 [0.29-0.50] | - | 0.00 [0.00-0.05] | 0.99 |
-| encodec | 12kbps | 0.28 [0.19-0.38] | - | 0.00 [0.00-0.05] | 0.99 |
-| encodec | 6kbps | 0.01 [0.00-0.07] | - | 0.00 [0.00-0.05] | 0.30 |
-| encodec | 3kbps | 0.00 [0.00-0.05] | - | 0.00 [0.00-0.05] | 0.16 |
-| encodec | 1.5kbps | 0.00 [0.00-0.05] | - | 0.00 [0.00-0.05] | 0.03 |
+| encodec | 24kbps | 0.39 [0.29-0.50] | 0.00 [0.00-0.05] | 0.00 [0.00-0.05] | 0.99 |
+| encodec | 12kbps | 0.28 [0.19-0.38] | 0.00 [0.00-0.05] | 0.00 [0.00-0.05] | 0.99 |
+| encodec | 6kbps | 0.01 [0.00-0.07] | 0.00 [0.00-0.05] | 0.00 [0.00-0.05] | 0.30 |
+| encodec | 3kbps | 0.00 [0.00-0.05] | 0.00 [0.00-0.05] | 0.00 [0.00-0.05] | 0.16 |
+| encodec | 1.5kbps | 0.00 [0.00-0.05] | 0.00 [0.00-0.05] | 0.00 [0.00-0.05] | 0.03 |
 | speed | 0.9x | 0.00 [0.00-0.05] | 0.00 [0.00-0.05] | 0.85 [0.76-0.91] | 0.00 |
 | speed | 0.95x | 0.00 [0.00-0.05] | 0.00 [0.00-0.05] | 0.00 [0.00-0.05] | 0.00 |
 | speed | 1.05x | 0.00 [0.00-0.05] | 0.00 [0.00-0.05] | 0.00 [0.00-0.05] | 0.00 |
@@ -56,11 +56,11 @@ No message returned counts as 8 (chance).
 | aac | 128kbps | 14.0 | 16.0 | 15.6 |
 | aac | 64kbps | 13.9 | 16.0 | 15.2 |
 | aac | 32kbps | 13.7 | 16.0 | 12.0 |
-| encodec | 24kbps | 13.2 | - | 8.0 |
-| encodec | 12kbps | 12.4 | - | 8.0 |
-| encodec | 6kbps | 10.1 | - | 8.0 |
-| encodec | 3kbps | 7.2 | - | 8.0 |
-| encodec | 1.5kbps | 6.9 | - | 8.0 |
+| encodec | 24kbps | 13.2 | 8.0 | 8.0 |
+| encodec | 12kbps | 12.4 | 8.0 | 8.0 |
+| encodec | 6kbps | 10.1 | 8.0 | 8.0 |
+| encodec | 3kbps | 7.2 | 8.0 | 8.0 |
+| encodec | 1.5kbps | 6.9 | 8.0 | 8.0 |
 | speed | 0.9x | 7.5 | 8.0 | 15.0 |
 | speed | 0.95x | 6.9 | 8.0 | 8.0 |
 | speed | 1.05x | 9.1 | 8.0 | 8.0 |
@@ -101,17 +101,17 @@ No message returned counts as 8 (chance).
 
 ## Message read by genre
 
-'none' = no attack; 'attacks' = mean over the 27 attack variants that every method was tested with, so the methods are compared on the same set.
+'none' = no attack; 'attacks' = mean over the 32 attack variants that every method was tested with, so the methods are compared on the same set.
 
 | Genre | audioseal: none | audioseal: attacks | audiowmark: none | audiowmark: attacks | wavmark: none | wavmark: attacks |
 |---|---|---|---|---|---|---|
-| Electronic | 0.90 | 0.40 | 1.00 | 0.54 | 1.00 | 0.70 |
-| Experimental | 0.30 | 0.20 | 1.00 | 0.55 | 0.60 | 0.41 |
-| Folk | 0.80 | 0.49 | 1.00 | 0.54 | 1.00 | 0.73 |
-| Hip-Hop | 0.60 | 0.34 | 1.00 | 0.55 | 1.00 | 0.65 |
-| Instrumental | 0.70 | 0.40 | 1.00 | 0.55 | 1.00 | 0.71 |
-| International | 0.60 | 0.33 | 1.00 | 0.55 | 1.00 | 0.66 |
-| Pop | 0.70 | 0.33 | 1.00 | 0.55 | 1.00 | 0.65 |
-| Rock | 0.50 | 0.28 | 1.00 | 0.55 | 1.00 | 0.58 |
+| Electronic | 0.90 | 0.37 | 1.00 | 0.45 | 1.00 | 0.59 |
+| Experimental | 0.30 | 0.18 | 1.00 | 0.46 | 0.60 | 0.35 |
+| Folk | 0.80 | 0.44 | 1.00 | 0.46 | 1.00 | 0.61 |
+| Hip-Hop | 0.60 | 0.31 | 1.00 | 0.47 | 1.00 | 0.55 |
+| Instrumental | 0.70 | 0.37 | 1.00 | 0.46 | 1.00 | 0.60 |
+| International | 0.60 | 0.29 | 1.00 | 0.47 | 1.00 | 0.56 |
+| Pop | 0.70 | 0.29 | 1.00 | 0.46 | 1.00 | 0.55 |
+| Rock | 0.50 | 0.25 | 1.00 | 0.47 | 1.00 | 0.49 |
 
 Tracks per genre: 10. With n tracks one track moves a value by 1/n (0.1 for 10 tracks), so genre differences are preliminary.
