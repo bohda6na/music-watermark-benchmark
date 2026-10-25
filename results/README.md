@@ -6,10 +6,10 @@ bit accuracy >= 14/16 (0.875).
 
 Files (columns: `method, attack, params, genre, track_id, detected, snr, bit_acc, detect_prob`;
 `detect_prob` is empty for audiowmark):
-- `results_audiowmark.csv`: main run, 80 tracks x 29 rows = 2320 rows (no attack, 27 attack
-  variants and one unwatermarked control);
+- `results_audiowmark.csv`: main run, 80 tracks x 34 rows = 2720 rows (no attack, 32 attack
+  variants including EnCodec, and one unwatermarked control)
 - `results_audiowmark_detect_speed.csv`: extra run with `--detect-speed`, 80 x 3 = 240 rows
-  (speed 0.9x and 1.1x, plus the unwatermarked control with the option switched on).
+  (speed 0.9x and 1.1x, plus the unwatermarked control with the option switched on)
 
 Reproduce the numbers below (needs only the CSV files, no audio):
 ```
@@ -30,6 +30,7 @@ python scripts/summarize_results.py results/results_audiowmark_detect_speed.csv
 | lowpass | cutoff 3 kHz | 1.00 |
 | highpass | cutoff 300 Hz | 1.00 |
 | reverberation | decay 0.4, delay 50 ms, 5 echoes | 1.00 |
+| encodec | 24 / 12 / 6 / 3 / 1.5 kbps | 0.00 for all |
 | speed | 0.9x, 0.95x, 1.05x, 1.1x | 0.00 |
 | time_stretch | 0.9x, 0.95x, 1.05x, 1.1x | 0.00 |
 | pitch | -2, -1, +1, +2 semitones | 0.00 |
@@ -41,6 +42,10 @@ Experimental 9, Hip-Hop 9, International 9, Rock 9 (out of 10). With 10 tracks p
 does not show that genre matters. The two misses at 20 dB (tracks 615 and 1482) are the tracks
 with the highest embedding SNR (51.0 and 46.9 dB), which also fail at 10 dB; we did not test whether
 the embedding strength is the cause.
+
+EnCodec (neural codec, 24 kHz model, run on a Colab CPU) removes the message in all 80 tracks at
+every bitrate, including 24 kbps. We did not test the cause. WavMark gives the same 0.00; AudioSeal
+reads the message in 39% / 28% of tracks at 24 / 12 kbps (see the comparison in the main README).
 
 | Method | Speed | Detection rate | Mean bit accuracy |
 | ------ | ----- | -------------- | ----------------- |
@@ -69,6 +74,7 @@ the comparison must use equal conditions.
 - SNR measures how much the signal changed, not how audible the change is. We ran no
   listening tests.
 - The source files were already mp3, converted to WAV.
+- - EnCodec was run with one codec model (24 kHz) and the same resampling path for all methods; no other neural codec was tested
 ---
 
 # Results: AudioSeal on FMA-small
