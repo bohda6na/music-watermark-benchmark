@@ -54,12 +54,13 @@ Alternatives considered: writing our own echo hiding or phase coding implementat
 not do it, because the benchmark would then measure the quality of our implementation
 instead of an established method, and the time before the midterm is limited.
 
-## What to expect
+## What we found
 
-From the design: audiowmark should survive gain changes and cropping, probably also
-compression, and fail on time stretch and pitch shift. The pilot run on 80 tracks agrees with
-this for gain, crop, speed, time stretch and pitch (see `results/README.md`); compression
-and noise are still to be measured with the attacks of the other team members.
+On 80 tracks audiowmark survives gain, crop, MP3/AAC, low-pass, high-pass and reverb (1.00)
+and Gaussian noise at 30 dB (1.00) and 20 dB (0.98); at 10 dB it loses 16 of 80 tracks (0.80).
+It fails on speed, time stretch and pitch shift (0.00), as expected from desynchronisation,
+and on the EnCodec neural codec at every bitrate (0.00). With `--detect-speed` it reads the
+message at speed 0.9x and 1.1x in all 80 tracks. Details: `results/README.md`.
 
 ## Sources
 
