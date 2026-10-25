@@ -121,6 +121,38 @@ Message read with no attack, by genre (10 tracks each):
 - SNR after embedding: mean 25.5 dB (range 19.7 to 39.3), lower than audiowmark (31.0 dB). Genre means lie between 24.3 dB (Hip-Hop) and 27.3 dB (International).
 - The 14/16 rule is stricter for AudioSeal than its own detector, so a comparison with audiowmark on the `detected` column alone understates AudioSeal for "is this track watermarked?".
 
+### WavMark
+
+Detection rate = share of 80 tracks where at least 14 of 16 bits are read correctly. WavMark is a neural method (invertible network, works at 16 kHz). 80 tracks, 34 rows per track = 2720 rows, file `results/results_wavmark.csv`. Run by Lili Alania.
+
+| Attack | Parameters | Detection rate |
+|---|---|---|
+| none | - | 0.95 |
+| MP3 | 128 / 64 / 32 kbps | 0.95 / 0.91 / 0.44 |
+| AAC | 128 / 64 / 32 kbps | 0.95 / 0.90 / 0.51 |
+| EnCodec (neural codec) | 24 / 12 / 6 / 3 / 1.5 kbps | 0.00 for all |
+| speed | 0.9x / 0.95x / 1.05x / 1.1x | 0.85 / 0.00 / 0.00 / 0.84 |
+| time stretch | 0.9x / 0.95x / 1.05x / 1.1x | 0.91 / 0.95 / 0.91 / 0.90 |
+| pitch shift | -2, -1, +1, +2 semitones | 0.00 for all |
+| gain | -6 / +6 dB | 0.95 / 0.89 |
+| crop | keep first 50% | 0.95 |
+| Gaussian noise | SNR 30 / 20 / 10 dB | 0.94 / 0.78 / 0.01 |
+| low-pass | 3 kHz | 0.85 |
+| high-pass | 300 Hz | 0.95 |
+| reverb | 5 echoes, 50 ms, decay 0.4 | 0.83 |
+| unwatermarked track (control) | - | 0.00 |
+
+Mean SNR after embedding: 37.3 dB.
+
+- WavMark is the only one of the three methods that reads the message under time stretch (0.90-0.95) and under speed 0.9x and 1.1x (0.85 / 0.84).
+- It gives 0.00 at speed 0.95x and 1.05x, between two settings where it works. We do not know why and did not investigate.
+- Pitch shift and EnCodec remove the watermark at every setting (0.00), including EnCodec at 24 kbps.
+- It is weaker than audiowmark under strong compression (MP3 32 kbps 0.44, AAC 32 kbps 0.51) and under noise at 10 dB (0.01).
+- Without an attack it does not read the message in 4 of 80 tracks, all Experimental (track_id 897, 995, 997, 998). We did not check why.
+- No false positives on the unwatermarked control (0 of 80).
+- When no message is found, `bit_acc` is empty in the CSV (not 0.0), so such tracks count as 8 of 16 bits in the mean-bits table.
+- The WavMark wrapper changed during the project: the watermark residual is now added to the original track, so content above 8 kHz is kept. The CSV in the repository comes from the final version; the first partial numbers are not comparable with it.
+
 
 Limitations: 80 tracks, so genre-level conclusions are preliminary (one track is 10 percentage points within a genre); one fixed message and embedding strength; no listening tests (SNR does not measure perceived quality); the source files are already mp3 decoded to WAV.
 
@@ -148,10 +180,9 @@ All three methods are run on the same 80 tracks and the same 34 conditions (no a
 
 - **Pitch shift is the only attack that no method survives at any setting**, for both outputs (0.00 everywhere).
 - **Only WavMark survives time stretch (0.90-0.95) and speed 0.9x / 1.1x (0.85 / 0.84).** The same WavMark gives 0.00 at speed 0.95x and 1.05x. We do not know why and did not investigate. audiowmark and AudioSeal read nothing under speed and time stretch (AudioSeal's message at time stretch is partly read, up to 0.40, but its detector never fires).
-- **EnCodec removes the watermark of audiowmark and WavMark at every bitrate, even 24 kbps.** AudioSeal's message survives only at 24 and 12 kbps (0.39 / 0.28), but its detector still fires in 99% of tracks there and in 3-30% at 6 kbps and below. We did not test why neural codec resynthesis removes the classical and WavMark marks; this is an observation.
+- **EnCodec removes the watermark of audiowmark and WavMark at every bitrate, even 24 kbps.** AudioSeal's message survives only at 24 and 12 kbps (0.39 / 0.28), but its detector still fires in 99% of tracks there and in 3-30% at 6 kbps and below. We did not test why neural codec resynthesis removes the audiowmark and WavMark marks; this is an observation.
 - **audiowmark** survives compression with MP3 and AAC, filters, reverb, gain, crop and noise down to 20 dB (0.98); at 10 dB it keeps 0.80. **WavMark** is more sensitive to strong compression (MP3 32 kbps 0.44, AAC 32 kbps 0.51) and to noise at 10 dB (0.01). **AudioSeal's detector** is robust to everything except time, pitch and strong EnCodec, but the 16-bit message is read in only 64% of tracks even without an attack.
 - The methods are **not compared at equal audio quality**: each runs at its default strength and the embedding SNR differs (WavMark 37.3 dB, audiowmark 31.0 dB, AudioSeal 25.5 dB). A higher SNR means a weaker change to the signal, so "method A is more robust than B" cannot be concluded from this table alone.
-- WavMark does not read the message even without an attack in 4 of 80 tracks, all Experimental (tracks 897, 995, 997, 998).
 - AudioSeal's detector and the 14/16 message criterion answer different questions; compare the "message read" columns across methods and use the last column only for "is this track watermarked?".
 - With 10 tracks per genre, genre differences are preliminary (one track is 10 percentage points).
 
